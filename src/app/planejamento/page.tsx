@@ -23,6 +23,20 @@ const FAIXAS_ETARIAS = [
 
 const TURNOS = ["Manhã", "Tarde", "Integral"] as const;
 
+const TIPOS_ATIVIDADE = [
+  "Contação de história",
+  "Música",
+  "Pintura",
+  "Colagem",
+  "Movimento corporal",
+  "Exploração sensorial",
+  "Brincadeira orientada",
+  "Atividade com materiais concretos",
+  "Roda de conversa",
+] as const;
+
+const DURACOES = ["20 minutos", "30 minutos", "40 minutos", "50 minutos"] as const;
+
 const CAMPOS_EXPERIENCIA = [
   "O eu, o outro e o nós",
   "Corpo, gestos e movimentos",
@@ -40,20 +54,6 @@ const DIREITOS_APRENDIZAGEM = [
   "Conhecer-se",
 ] as const;
 
-const TIPOS_ATIVIDADE = [
-  "Contação de história",
-  "Música",
-  "Pintura",
-  "Colagem",
-  "Movimento corporal",
-  "Exploração sensorial",
-  "Brincadeira orientada",
-  "Atividade com materiais concretos",
-  "Roda de conversa",
-] as const;
-
-const DURACOES = ["20 minutos", "30 minutos", "40 minutos", "50 minutos"] as const;
-
 // ─── Tipos do estado do formulário ───────────────────────────────────────────
 
 type FormState = Omit<PlanningFormData, "direitosAprendizagem" | "tipoAtividade"> & {
@@ -67,11 +67,11 @@ const initialState: FormState = {
   turno: "",
   dataPeriodo: "",
   tema: "",
+  tipoAtividade: [],
+  duracao: "",
   campoExperiencia: "",
   direitosAprendizagem: [],
   objetivoAprendizagem: "",
-  tipoAtividade: [],
-  duracao: "",
   materiaisDisponiveis: "",
   observacoes: "",
 };
@@ -139,6 +139,12 @@ function SectionTitle({
 /**
  * Página de formulário para criação de novo planejamento pedagógico.
  *
+ * Ordenação dos campos conforme design-system.md § 11 (Progressão Cognitiva):
+ *   1. Sobre a Turma       — informações simples, sem reflexão
+ *   2. Sobre a Atividade   — informações de contexto
+ *   3. Proposta Pedagógica — decisões pedagógicas (reflexão)
+ *   4. Complementares      — detalhes opcionais
+ *
  * Gerenciamento local com useState.
  * Sem validação nesta etapa (pertence à T09).
  * Sem chamada à API nesta etapa (pertence à T10).
@@ -155,7 +161,11 @@ export default function PlanejamentoPage() {
     setForm((prev) => ({ ...prev, [name]: value }));
   }
 
-  function handleCheckboxList(field: "direitosAprendizagem" | "tipoAtividade", value: string, checked: boolean) {
+  function handleCheckboxList(
+    field: "direitosAprendizagem" | "tipoAtividade",
+    value: string,
+    checked: boolean
+  ) {
     setForm((prev) => ({
       ...prev,
       [field]: checked
@@ -222,7 +232,9 @@ export default function PlanejamentoPage() {
         <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
 
           {/* ══════════════════════════════════════
-              Seção 1 – Dados da Turma
+              Seção 1 — Sobre a Turma
+              Camada: informações simples
+              O professor já sabe essas respostas de cabeça.
           ══════════════════════════════════════ */}
           <section
             aria-labelledby="secao-turma"
@@ -241,12 +253,11 @@ export default function PlanejamentoPage() {
                 </svg>
               }
             >
-              Dados da Turma
+              Sobre a Turma
             </SectionTitle>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
-              {/* Turma */}
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="turma">
                   Turma <span className="text-red-500" aria-label="obrigatório">*</span>
@@ -259,7 +270,6 @@ export default function PlanejamentoPage() {
                 />
               </div>
 
-              {/* Faixa Etária */}
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="faixaEtaria">
                   Faixa Etária <span className="text-red-500" aria-label="obrigatório">*</span>
@@ -272,7 +282,6 @@ export default function PlanejamentoPage() {
                 />
               </div>
 
-              {/* Turno */}
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="turno">Turno</Label>
                 <SelectField
@@ -283,7 +292,6 @@ export default function PlanejamentoPage() {
                 />
               </div>
 
-              {/* Data / Período */}
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="dataPeriodo">Data / Período</Label>
                 <Input
@@ -299,7 +307,87 @@ export default function PlanejamentoPage() {
           </section>
 
           {/* ══════════════════════════════════════
-              Seção 2 – Proposta Pedagógica
+              Seção 2 — Sobre a Atividade
+              Camada: informações de contexto
+              O professor decide o que vai fazer, mas ainda sem reflexão pedagógica profunda.
+          ══════════════════════════════════════ */}
+          <section
+            aria-labelledby="secao-atividade"
+            className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 flex flex-col gap-5"
+          >
+            <SectionTitle
+              id="secao-atividade"
+              icon={
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                  className="w-4 h-4" aria-hidden="true">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                </svg>
+              }
+            >
+              Sobre a Atividade
+            </SectionTitle>
+
+            {/* Tema */}
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="tema">
+                Tema <span className="text-red-500" aria-label="obrigatório">*</span>
+              </Label>
+              <Input
+                id="tema" name="tema"
+                value={form.tema} onChange={handleChange}
+                placeholder="Ex: Cores, animais, família, natureza, formas, música..."
+                className="h-9 rounded-xl shadow-sm"
+                autoComplete="off"
+              />
+            </div>
+
+            {/* Tipo de Atividade */}
+            <fieldset>
+              <legend className="text-sm font-medium text-slate-700 mb-3">
+                Tipo de Atividade
+                <span className="ml-1.5 text-xs font-normal text-slate-400">
+                  — pode selecionar mais de um
+                </span>
+              </legend>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {TIPOS_ATIVIDADE.map((tipo) => (
+                  <label
+                    key={tipo}
+                    htmlFor={`tipo-${tipo}`}
+                    className="flex items-center gap-2.5 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2.5 cursor-pointer hover:bg-blue-50 hover:border-blue-200 transition-colors has-[:checked]:bg-blue-50 has-[:checked]:border-blue-300"
+                  >
+                    <Checkbox
+                      id={`tipo-${tipo}`}
+                      checked={form.tipoAtividade.includes(tipo)}
+                      onCheckedChange={(checked) =>
+                        handleCheckboxList("tipoAtividade", tipo, checked === true)
+                      }
+                    />
+                    <span className="text-sm text-slate-700 select-none">{tipo}</span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+
+            {/* Duração */}
+            <div className="flex flex-col gap-1.5 sm:max-w-xs">
+              <Label htmlFor="duracao">Duração</Label>
+              <SelectField
+                id="duracao" name="duracao"
+                value={form.duracao || ""} onChange={handleChange}
+                placeholder="Selecione a duração"
+                options={DURACOES}
+              />
+            </div>
+
+          </section>
+
+          {/* ══════════════════════════════════════
+              Seção 3 — Proposta Pedagógica
+              Camada: decisões pedagógicas
+              Aqui o professor conecta a atividade à BNCC.
+              Chegou aqui já com contexto — o esforço cognitivo é menor.
           ══════════════════════════════════════ */}
           <section
             aria-labelledby="secao-proposta"
@@ -318,20 +406,6 @@ export default function PlanejamentoPage() {
             >
               Proposta Pedagógica
             </SectionTitle>
-
-            {/* Tema */}
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="tema">
-                Tema <span className="text-red-500" aria-label="obrigatório">*</span>
-              </Label>
-              <Input
-                id="tema" name="tema"
-                value={form.tema} onChange={handleChange}
-                placeholder="Ex: Cores, animais, família, natureza, formas, música..."
-                className="h-9 rounded-xl shadow-sm"
-                autoComplete="off"
-              />
-            </div>
 
             {/* Campo de Experiência */}
             <div className="flex flex-col gap-1.5">
@@ -394,68 +468,29 @@ export default function PlanejamentoPage() {
           </section>
 
           {/* ══════════════════════════════════════
-              Seção 3 – Detalhes da Atividade
+              Seção 4 — Informações Adicionais
+              Camada: complementares e opcionais
+              Detalhes práticos que enriquecem o plano, mas não são essenciais.
           ══════════════════════════════════════ */}
           <section
-            aria-labelledby="secao-detalhes"
+            aria-labelledby="secao-adicionais"
             className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 flex flex-col gap-5"
           >
             <SectionTitle
-              id="secao-detalhes"
+              id="secao-adicionais"
               icon={
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
                   stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
                   className="w-4 h-4" aria-hidden="true">
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                  <line x1="16" y1="2" x2="16" y2="6" />
-                  <line x1="8" y1="2" x2="8" y2="6" />
-                  <line x1="3" y1="10" x2="21" y2="10" />
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
                 </svg>
               }
             >
-              Detalhes da Atividade
+              Informações Adicionais
             </SectionTitle>
 
-            {/* Tipo de Atividade — multi-select via checkboxes */}
-            <fieldset>
-              <legend className="text-sm font-medium text-slate-700 mb-3">
-                Tipo de Atividade
-                <span className="ml-1.5 text-xs font-normal text-slate-400">
-                  — pode selecionar mais de um
-                </span>
-              </legend>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {TIPOS_ATIVIDADE.map((tipo) => (
-                  <label
-                    key={tipo}
-                    htmlFor={`tipo-${tipo}`}
-                    className="flex items-center gap-2.5 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2.5 cursor-pointer hover:bg-blue-50 hover:border-blue-200 transition-colors has-[:checked]:bg-blue-50 has-[:checked]:border-blue-300"
-                  >
-                    <Checkbox
-                      id={`tipo-${tipo}`}
-                      checked={form.tipoAtividade.includes(tipo)}
-                      onCheckedChange={(checked) =>
-                        handleCheckboxList("tipoAtividade", tipo, checked === true)
-                      }
-                    />
-                    <span className="text-sm text-slate-700 select-none">{tipo}</span>
-                  </label>
-                ))}
-              </div>
-            </fieldset>
-
-            {/* Duração */}
-            <div className="flex flex-col gap-1.5 sm:max-w-xs">
-              <Label htmlFor="duracao">Duração</Label>
-              <SelectField
-                id="duracao" name="duracao"
-                value={form.duracao || ""} onChange={handleChange}
-                placeholder="Selecione a duração"
-                options={DURACOES}
-              />
-            </div>
-
-            {/* Materiais Disponíveis */}
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="materiaisDisponiveis">Materiais Disponíveis</Label>
               <Input
@@ -467,7 +502,6 @@ export default function PlanejamentoPage() {
               />
             </div>
 
-            {/* Observações */}
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="observacoes">Observações</Label>
               <Textarea
@@ -482,7 +516,7 @@ export default function PlanejamentoPage() {
           </section>
 
           {/* ── Botão de envio ── */}
-          <div className="flex justify-end pt-2 pb-10">
+          <div className="flex flex-col items-center gap-3 pt-2 pb-10">
             <Button
               type="submit"
               className="w-full sm:w-auto px-8 py-2.5 h-auto text-base font-semibold rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-sm gap-2 transition-colors"
@@ -494,6 +528,9 @@ export default function PlanejamentoPage() {
               </svg>
               Gerar Planejamento
             </Button>
+            <p className="text-xs text-slate-400 text-center max-w-sm">
+              O resultado gerado é uma sugestão. Você poderá revisar e editar antes de usar.
+            </p>
           </div>
 
         </form>

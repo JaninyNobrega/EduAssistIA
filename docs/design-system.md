@@ -249,3 +249,53 @@ Se a resposta for não, substituir por:
 - inteligência artificial.
 
 O objetivo do EduAssist IA é reduzir o trabalho do professor, e não criar novas etapas.
+
+## 11. Progressão Cognitiva
+
+Os campos do formulário deverão seguir a ordem natural do pensamento do professor.
+
+Primeiro:
+informações simples.
+
+Depois:
+informações de contexto.
+
+Depois:
+decisões pedagógicas.
+
+Por último:
+informações complementares.
+
+Nunca iniciar o formulário com perguntas que exijam reflexão profunda.
+
+## § 12 — Fluxo baseado no raciocínio do professor
+
+Os formulários do EduAssist IA deverão seguir a sequência natural do pensamento docente, organizando os campos como respostas a perguntas simples.
+
+Sempre que possível, a ordem deverá responder às seguintes perguntas:
+
+1. **Quem?**
+
+   * Para qual turma?
+   * Qual faixa etária?
+   * Em qual turno?
+   * Em qual período?
+
+2. **O que faremos?**
+
+   * Qual será o tema?
+   * Que tipo de atividade será realizada?
+   * Quanto tempo ela terá?
+
+3. **Como isso se relaciona com a BNCC?**
+
+   * Qual campo de experiência?
+   * Quais direitos de aprendizagem?
+   * Qual objetivo de aprendizagem?
+
+4. **Quais recursos serão utilizados?**
+
+   * Materiais disponíveis.
+   * Observações e adaptações.
+
+Essa organização reduz a carga cognitiva, pois acompanha o raciocínio natural do professor durante o planejamento, evitando exigir decisões pedagógicas complexas antes que o contexto da atividade esteja definido.
