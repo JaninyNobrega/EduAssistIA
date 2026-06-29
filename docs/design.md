@@ -169,7 +169,6 @@ Não serão implementados nesta etapa:
 * banco de dados;
 * histórico;
 * dashboard;
-* PDF;
 * integração real com OpenAI.
 
 ---

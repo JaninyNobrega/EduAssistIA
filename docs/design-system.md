@@ -7,11 +7,8 @@ Versão: 1.0
 ## 1. Propósito
 
 O EduAssist IA é um assistente de apoio ao planejamento pedagógico.
-
 Sua interface deve transmitir simplicidade, acolhimento e organização.
-
 O professor deve sentir que está sendo guiado durante o planejamento, e não preenchendo um formulário burocrático.
-
 A tecnologia deve permanecer em segundo plano. O foco sempre será a experiência do professor.
 
 ---
@@ -120,9 +117,7 @@ Todos os botões principais devem possuir:
 ### Tipografia
 
 Toda a aplicação deverá utilizar a mesma família tipográfica.
-
 Não misturar fontes serifadas e sans-serif.
-
 Priorizar tipografia moderna e de alta legibilidade.
 
 ---
