@@ -1,23 +1,98 @@
+"use client";
+
+import { useState } from "react";
 import type { PlanningResult as PlanningResultType } from "@/lib/types";
 import { SectionCard } from "@/components/planning/SectionCard";
 
 /**
- * Componente de exibição do planejamento pedagógico gerado.
- *
- * Apresenta cada campo do PlanningResult em cards organizados,
- * seguindo o design-system.md:
- * - Cards com cantos arredondados, sombra suave e espaçamento generoso
- * - Ícones azuis nos títulos das seções
- * - Tipografia consistente com o restante da aplicação
- * - Sem edição nesta etapa (T12)
- *
- * Requisitos: RF08, seção 5 do requirements.md
+ * Serializa string[] → string com itens separados por \n (para edição em textarea).
  */
-export function PlanningResult({ result }: { result: PlanningResultType }) {
+function listToText(items: string[]): string {
+  return items.join("\n");
+}
+
+/**
+ * Deserializa string → string[], descartando linhas vazias.
+ */
+function textToList(text: string): string[] {
+  return text
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
+/**
+ * Componente de exibição e edição do planejamento pedagógico gerado.
+ *
+ * - Cada seção possui um botão "Editar" discreto no cabeçalho.
+ * - Apenas uma seção fica em edição por vez.
+ * - A edição ocorre apenas em memória (sem API, sem banco).
+ * - Textos simples → textarea; listas → textarea com um item por linha.
+ *
+ * Requisitos: RF08, RF09, RB02
+ */
+export function PlanningResult({ result: initialResult }: { result: PlanningResultType }) {
+  // Estado do planejamento — mutável apenas em memória
+  const [result, setResult] = useState<PlanningResultType>(initialResult);
+
+  // Qual seção está em edição (null = nenhuma)
+  const [editingSection, setEditingSection] = useState<string | null>(null);
+
+  /** Abre o modo de edição para uma seção. */
+  function handleEdit(key: string) {
+    setEditingSection(key);
+  }
+
+  /** Salva o rascunho: atualiza o resultado em memória e fecha a edição. */
+  function handleSave(key: string, value: string) {
+    setResult((prev) => {
+      const updated = { ...prev };
+
+      // Campos que são listas (string[])
+      const listFields: (keyof PlanningResultType)[] = [
+        "direitosAprendizagem",
+        "metodologia",
+        "materiaisNecessarios",
+        "adaptacoesPossiveis",
+      ];
+
+      if (listFields.includes(key as keyof PlanningResultType)) {
+        (updated as Record<string, unknown>)[key] = textToList(value);
+      } else {
+        (updated as Record<string, unknown>)[key] = value;
+      }
+
+      return updated;
+    });
+
+    setEditingSection(null);
+  }
+
+  /** Descarta o rascunho e fecha a edição. */
+  function handleCancel() {
+    setEditingSection(null);
+  }
+
+  /**
+   * Monta o editConfig para cada seção, centralizando a lógica de edição.
+   * Campos lista são serializados com listToText para exibição no textarea.
+   */
+  function editConfig(sectionKey: string, value: string | string[]) {
+    const currentValue = Array.isArray(value) ? listToText(value) : value;
+    return {
+      sectionKey,
+      currentValue,
+      editingSection,
+      onEdit: handleEdit,
+      onSave: handleSave,
+      onCancel: handleCancel,
+    };
+  }
+
   return (
     <section aria-label="Planejamento gerado" className="flex flex-col gap-4 mt-2 mb-10">
 
-      {/* Cabeçalho do resultado */}
+      {/* Cabeçalho do resultado — identificação (não editável) */}
       <div className="bg-blue-600 rounded-2xl p-6 text-white shadow-md">
         <div className="flex items-center gap-2 mb-1">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
@@ -45,6 +120,7 @@ export function PlanningResult({ result }: { result: PlanningResultType }) {
       {/* Campo de Experiência */}
       <SectionCard
         title="Campo de Experiência"
+        editConfig={editConfig("campoExperiencia", result.campoExperiencia)}
         icon={
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
@@ -60,6 +136,7 @@ export function PlanningResult({ result }: { result: PlanningResultType }) {
       {/* Direitos de Aprendizagem */}
       <SectionCard
         title="Direitos de Aprendizagem"
+        editConfig={editConfig("direitosAprendizagem", result.direitosAprendizagem)}
         icon={
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
@@ -84,6 +161,7 @@ export function PlanningResult({ result }: { result: PlanningResultType }) {
       {/* Objetivo de Aprendizagem */}
       <SectionCard
         title="Objetivo de Aprendizagem"
+        editConfig={editConfig("objetivoAprendizagem", result.objetivoAprendizagem)}
         icon={
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
@@ -99,6 +177,7 @@ export function PlanningResult({ result }: { result: PlanningResultType }) {
       {/* Vivência de Aprendizagem */}
       <SectionCard
         title="Vivência de Aprendizagem"
+        editConfig={editConfig("vivenciaAprendizagem", result.vivenciaAprendizagem)}
         icon={
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
@@ -116,6 +195,7 @@ export function PlanningResult({ result }: { result: PlanningResultType }) {
       {/* Metodologia */}
       <SectionCard
         title="Metodologia"
+        editConfig={editConfig("metodologia", result.metodologia)}
         icon={
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
@@ -144,6 +224,7 @@ export function PlanningResult({ result }: { result: PlanningResultType }) {
       {/* Materiais Necessários */}
       <SectionCard
         title="Materiais Necessários"
+        editConfig={editConfig("materiaisNecessarios", result.materiaisNecessarios)}
         icon={
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
@@ -165,6 +246,7 @@ export function PlanningResult({ result }: { result: PlanningResultType }) {
       {/* Avaliação por Observação */}
       <SectionCard
         title="Avaliação por Observação"
+        editConfig={editConfig("avaliacaoObservacao", result.avaliacaoObservacao)}
         icon={
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
@@ -180,6 +262,7 @@ export function PlanningResult({ result }: { result: PlanningResultType }) {
       {/* Adaptações Possíveis */}
       <SectionCard
         title="Adaptações Possíveis"
+        editConfig={editConfig("adaptacoesPossiveis", result.adaptacoesPossiveis)}
         icon={
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
@@ -203,6 +286,7 @@ export function PlanningResult({ result }: { result: PlanningResultType }) {
       {/* Observação Final */}
       <SectionCard
         title="Observação Final"
+        editConfig={editConfig("observacaoFinal", result.observacaoFinal)}
         icon={
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
