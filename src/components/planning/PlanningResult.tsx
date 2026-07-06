@@ -22,6 +22,68 @@ function textToList(text: string): string[] {
 }
 
 /**
+ * Formata o planejamento completo como texto simples para cópia.
+ * Cada seção recebe um título em caixa alta e separadores para facilitar
+ * a leitura quando colado em qualquer editor de texto.
+ *
+ * Requisito: RF10
+ */
+function formatAsText(r: PlanningResultType): string {
+  const sep = "─".repeat(48);
+  const lines: string[] = [];
+
+  lines.push(r.identificacao.toUpperCase());
+  lines.push(`Turma: ${r.turma} | Faixa etária: ${r.faixaEtaria} | Tema: ${r.tema}`);
+  lines.push("");
+
+  lines.push(sep);
+  lines.push("CAMPO DE EXPERIÊNCIA");
+  lines.push(r.campoExperiencia);
+  lines.push("");
+
+  lines.push(sep);
+  lines.push("DIREITOS DE APRENDIZAGEM");
+  r.direitosAprendizagem.forEach((d) => lines.push(`• ${d}`));
+  lines.push("");
+
+  lines.push(sep);
+  lines.push("OBJETIVO DE APRENDIZAGEM");
+  lines.push(r.objetivoAprendizagem);
+  lines.push("");
+
+  lines.push(sep);
+  lines.push("VIVÊNCIA DE APRENDIZAGEM");
+  lines.push(r.vivenciaAprendizagem);
+  lines.push("");
+
+  lines.push(sep);
+  lines.push("METODOLOGIA");
+  r.metodologia.forEach((etapa, i) => lines.push(`${i + 1}. ${etapa}`));
+  lines.push("");
+
+  lines.push(sep);
+  lines.push("MATERIAIS NECESSÁRIOS");
+  r.materiaisNecessarios.forEach((m) => lines.push(`• ${m}`));
+  lines.push("");
+
+  lines.push(sep);
+  lines.push("AVALIAÇÃO POR OBSERVAÇÃO");
+  lines.push(r.avaliacaoObservacao);
+  lines.push("");
+
+  lines.push(sep);
+  lines.push("ADAPTAÇÕES POSSÍVEIS");
+  r.adaptacoesPossiveis.forEach((a) => lines.push(`• ${a}`));
+  lines.push("");
+
+  lines.push(sep);
+  lines.push("OBSERVAÇÃO FINAL");
+  lines.push(r.observacaoFinal);
+
+  return lines.join("\n");
+}
+
+/**
  * Componente de exibição e edição do planejamento pedagógico gerado.
  *
  * - Cada seção possui um botão "Editar" discreto no cabeçalho.
@@ -37,6 +99,9 @@ export function PlanningResult({ result: initialResult }: { result: PlanningResu
 
   // Qual seção está em edição (null = nenhuma)
   const [editingSection, setEditingSection] = useState<string | null>(null);
+
+  // Estado do botão de cópia: idle | copied | error
+  const [copyState, setCopyState] = useState<"idle" | "copied" | "error">("idle");
 
   /** Abre o modo de edição para uma seção. */
   function handleEdit(key: string) {
@@ -71,6 +136,18 @@ export function PlanningResult({ result: initialResult }: { result: PlanningResu
   /** Descarta o rascunho e fecha a edição. */
   function handleCancel() {
     setEditingSection(null);
+  }
+
+  /** Copia o planejamento formatado para a área de transferência. RF10 */
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(formatAsText(result));
+      setCopyState("copied");
+    } catch {
+      setCopyState("error");
+    } finally {
+      setTimeout(() => setCopyState("idle"), 3000);
+    }
   }
 
   /**
@@ -114,6 +191,48 @@ export function PlanningResult({ result: initialResult }: { result: PlanningResu
           <span className="inline-flex items-center rounded-lg bg-white/20 px-2.5 py-1 text-xs font-medium">
             {result.tema}
           </span>
+        </div>
+
+        {/* Botão Copiar — RF10 */}
+        <div className="mt-4 flex items-center gap-3">
+          <button
+            type="button"
+            onClick={handleCopy}
+            className="inline-flex items-center gap-2 rounded-xl bg-white/20 hover:bg-white/30 text-white text-sm font-semibold px-4 py-2 transition-colors"
+            aria-live="polite"
+          >
+            {copyState === "copied" ? (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                  className="w-4 h-4" aria-hidden="true">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                Planejamento copiado!
+              </>
+            ) : copyState === "error" ? (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                  className="w-4 h-4" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+                Não foi possível copiar
+              </>
+            ) : (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                  className="w-4 h-4" aria-hidden="true">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                </svg>
+                Copiar planejamento
+              </>
+            )}
+          </button>
         </div>
       </div>
 
