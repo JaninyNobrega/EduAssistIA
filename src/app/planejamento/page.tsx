@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { PlanningFormData, PlanningResult } from "@/lib/types";
+import { PlanningResult as PlanningResultComponent } from "@/components/planning/PlanningResult";
 
 // ─── Dados estáticos dos selects ─────────────────────────────────────────────
 
@@ -667,17 +668,8 @@ export default function PlanejamentoPage() {
             </p>
           </div>
 
-          {/* ── Resultado provisório (T11 implementará o componente completo) ── */}
-          {result && (
-            <div className="bg-green-50 border border-green-200 rounded-2xl p-6 mb-8">
-              <p className="text-sm font-medium text-green-800">
-                ✓ Planejamento gerado com sucesso.
-              </p>
-              <p className="text-xs text-green-600 mt-1">
-                {result.identificacao}
-              </p>
-            </div>
-          )}
+          {/* ── Resultado do planejamento gerado ── */}
+          {result && <PlanningResultComponent result={result} />}
 
         </form>
       </main>
