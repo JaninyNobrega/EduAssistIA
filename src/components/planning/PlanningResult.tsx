@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { PlanningResult as PlanningResultType } from "@/lib/types";
 import { SectionCard } from "@/components/planning/SectionCard";
+import { generatePdf } from "@/lib/generatePdf";
 
 /**
  * Serializa string[] → string com itens separados por \n (para edição em textarea).
@@ -103,6 +104,9 @@ export function PlanningResult({ result: initialResult }: { result: PlanningResu
   // Estado do botão de cópia: idle | copied | error
   const [copyState, setCopyState] = useState<"idle" | "copied" | "error">("idle");
 
+  // Estado do botão de PDF: idle | generating | error
+  const [pdfState, setPdfState] = useState<"idle" | "generating" | "error">("idle");
+
   /** Abre o modo de edição para uma seção. */
   function handleEdit(key: string) {
     setEditingSection(key);
@@ -150,6 +154,18 @@ export function PlanningResult({ result: initialResult }: { result: PlanningResu
     }
   }
 
+  /** Gera e faz o download do planejamento em PDF. RF10 */
+  async function handleExportPdf() {
+    setPdfState("generating");
+    try {
+      await generatePdf(result);
+      setPdfState("idle");
+    } catch {
+      setPdfState("error");
+      setTimeout(() => setPdfState("idle"), 3000);
+    }
+  }
+
   /**
    * Monta o editConfig para cada seção, centralizando a lógica de edição.
    * Campos lista são serializados com listToText para exibição no textarea.
@@ -193,8 +209,9 @@ export function PlanningResult({ result: initialResult }: { result: PlanningResu
           </span>
         </div>
 
-        {/* Botão Copiar — RF10 */}
-        <div className="mt-4 flex items-center gap-3">
+        {/* Botões de ação — RF10 */}
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          {/* Copiar */}
           <button
             type="button"
             onClick={handleCopy}
@@ -230,6 +247,49 @@ export function PlanningResult({ result: initialResult }: { result: PlanningResu
                   <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                 </svg>
                 Copiar planejamento
+              </>
+            )}
+          </button>
+
+          {/* Exportar PDF */}
+          <button
+            type="button"
+            onClick={handleExportPdf}
+            disabled={pdfState === "generating"}
+            className="inline-flex items-center gap-2 rounded-xl bg-white/20 hover:bg-white/30 text-white text-sm font-semibold px-4 py-2 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            aria-live="polite"
+          >
+            {pdfState === "generating" ? (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                  className="w-4 h-4 animate-spin" aria-hidden="true">
+                  <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                </svg>
+                Gerando PDF...
+              </>
+            ) : pdfState === "error" ? (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                  className="w-4 h-4" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+                Erro ao gerar PDF
+              </>
+            ) : (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                  className="w-4 h-4" aria-hidden="true">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="12" y1="18" x2="12" y2="12" />
+                  <line x1="9" y1="15" x2="15" y2="15" />
+                </svg>
+                Exportar PDF
               </>
             )}
           </button>
