@@ -54,7 +54,64 @@ const DIREITOS_APRENDIZAGEM = [
   "Conhecer-se",
 ] as const;
 
-// ─── Tipos do estado do formulário ───────────────────────────────────────────
+// ─── Tipos e lógica de validação ─────────────────────────────────────────────
+
+/**
+ * Erros de validação dos campos obrigatórios.
+ * Cada chave corresponde a um campo obrigatório definido em requirements.md § 3.1.
+ */
+type FormErrors = {
+  turma?: string;
+  faixaEtaria?: string;
+  tema?: string;
+  campoExperiencia?: string;
+  direitosAprendizagem?: string;
+  objetivoAprendizagem?: string;
+};
+
+/**
+ * Valida os campos obrigatórios do formulário.
+ * Retorna um objeto com mensagens de erro por campo.
+ * Se o objeto estiver vazio, o formulário é válido.
+ *
+ * Requisitos: RF03, RF04
+ */
+function validate(form: FormState): FormErrors {
+  const errors: FormErrors = {};
+
+  if (!form.turma)
+    errors.turma = "Selecione a turma.";
+
+  if (!form.faixaEtaria)
+    errors.faixaEtaria = "Selecione a faixa etária.";
+
+  if (!form.tema.trim())
+    errors.tema = "Informe o tema da atividade.";
+
+  if (!form.campoExperiencia)
+    errors.campoExperiencia = "Selecione o campo de experiência.";
+
+  if (form.direitosAprendizagem.length === 0)
+    errors.direitosAprendizagem = "Selecione pelo menos um direito de aprendizagem.";
+
+  if (!form.objetivoAprendizagem.trim())
+    errors.objetivoAprendizagem = "Descreva o objetivo de aprendizagem.";
+
+  return errors;
+}
+
+// ─── Componente auxiliar: Mensagem de erro inline ────────────────────────────
+
+function FieldError({ message }: { message?: string }) {
+  if (!message) return null;
+  return (
+    <p role="alert" className="text-xs text-red-500 mt-0.5">
+      {message}
+    </p>
+  );
+}
+
+
 
 type FormState = Omit<PlanningFormData, "direitosAprendizagem" | "tipoAtividade"> & {
   direitosAprendizagem: string[];
@@ -85,6 +142,7 @@ function SelectField({
   onChange,
   placeholder,
   options,
+  invalid = false,
 }: {
   id: string;
   name: string;
@@ -92,6 +150,7 @@ function SelectField({
   onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
   placeholder: string;
   options: readonly string[];
+  invalid?: boolean;
 }) {
   return (
     <select
@@ -99,7 +158,12 @@ function SelectField({
       name={name}
       value={value}
       onChange={onChange}
-      className="h-9 w-full rounded-xl border border-input bg-white px-3 py-1 text-sm text-foreground shadow-sm transition-colors outline-none focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+      aria-invalid={invalid}
+      className={`h-9 w-full rounded-xl border bg-white px-3 py-1 text-sm text-foreground shadow-sm transition-colors outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50 ${
+        invalid
+          ? "border-red-400 focus-visible:border-red-400 focus-visible:ring-red-400/20"
+          : "border-input focus-visible:border-blue-500 focus-visible:ring-blue-500/20"
+      }`}
     >
       <option value="">{placeholder}</option>
       {options.map((opt) => (
@@ -153,6 +217,8 @@ function SectionTitle({
  */
 export default function PlanejamentoPage() {
   const [form, setForm] = useState<FormState>(initialState);
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [submitted, setSubmitted] = useState(false);
 
   function handleChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -176,7 +242,19 @@ export default function PlanejamentoPage() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    // Validação e chamada à API serão implementadas na T09 e T10.
+    setSubmitted(true);
+
+    const validationErrors = validate(form);
+    setErrors(validationErrors);
+
+    if (Object.keys(validationErrors).length > 0) {
+      // Rola até o primeiro campo com erro para orientar o professor
+      const firstErrorField = Object.keys(validationErrors)[0];
+      document.getElementById(firstErrorField)?.focus();
+      return;
+    }
+
+    // Validação aprovada — chamada à API será implementada na T10.
     console.log("Dados do formulário:", form);
   }
 
@@ -267,7 +345,9 @@ export default function PlanejamentoPage() {
                   onChange={handleChange}
                   placeholder="Selecione a turma"
                   options={TURMAS}
+                  invalid={submitted && !!errors.turma}
                 />
+                <FieldError message={submitted ? errors.turma : undefined} />
               </div>
 
               <div className="flex flex-col gap-1.5">
@@ -279,7 +359,9 @@ export default function PlanejamentoPage() {
                   onChange={handleChange}
                   placeholder="Selecione a faixa etária"
                   options={FAIXAS_ETARIAS}
+                  invalid={submitted && !!errors.faixaEtaria}
                 />
+                <FieldError message={submitted ? errors.faixaEtaria : undefined} />
               </div>
 
               <div className="flex flex-col gap-1.5">
@@ -337,9 +419,11 @@ export default function PlanejamentoPage() {
                 id="tema" name="tema"
                 value={form.tema} onChange={handleChange}
                 placeholder="Ex: Cores, animais, família, natureza, formas, música..."
-                className="h-9 rounded-xl shadow-sm"
+                className={`h-9 rounded-xl shadow-sm${submitted && errors.tema ? " border-red-400 focus-visible:border-red-400 focus-visible:ring-red-400/20" : ""}`}
                 autoComplete="off"
+                aria-invalid={submitted && !!errors.tema}
               />
+              <FieldError message={submitted ? errors.tema : undefined} />
             </div>
 
             {/* Tipo de Atividade */}
@@ -418,7 +502,9 @@ export default function PlanejamentoPage() {
                 value={form.campoExperiencia} onChange={handleChange}
                 placeholder="Selecione o campo de experiência"
                 options={CAMPOS_EXPERIENCIA}
+                invalid={submitted && !!errors.campoExperiencia}
               />
+              <FieldError message={submitted ? errors.campoExperiencia : undefined} />
             </div>
 
             {/* Direitos de Aprendizagem */}
@@ -448,6 +534,7 @@ export default function PlanejamentoPage() {
                   </label>
                 ))}
               </div>
+              <FieldError message={submitted ? errors.direitosAprendizagem : undefined} />
             </fieldset>
 
             {/* Objetivo de Aprendizagem */}
@@ -461,8 +548,10 @@ export default function PlanejamentoPage() {
                 value={form.objetivoAprendizagem} onChange={handleChange}
                 placeholder="Ex: Desenvolver oralidade, coordenação motora, percepção de cores..."
                 rows={3}
-                className="rounded-xl shadow-sm resize-none"
+                className={`rounded-xl shadow-sm resize-none${submitted && errors.objetivoAprendizagem ? " border-red-400 focus-visible:border-red-400 focus-visible:ring-red-400/20" : ""}`}
+                aria-invalid={submitted && !!errors.objetivoAprendizagem}
               />
+              <FieldError message={submitted ? errors.objetivoAprendizagem : undefined} />
             </div>
 
           </section>
