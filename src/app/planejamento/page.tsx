@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import type { PlanningFormData } from "@/lib/types";
+import type { PlanningFormData, PlanningResult } from "@/lib/types";
 
 // ─── Dados estáticos dos selects ─────────────────────────────────────────────
 
@@ -219,6 +219,9 @@ export default function PlanejamentoPage() {
   const [form, setForm] = useState<FormState>(initialState);
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitted, setSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [result, setResult] = useState<PlanningResult | null>(null);
+  const [apiError, setApiError] = useState<string | null>(null);
 
   function handleChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -240,7 +243,7 @@ export default function PlanejamentoPage() {
     }));
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitted(true);
 
@@ -248,14 +251,35 @@ export default function PlanejamentoPage() {
     setErrors(validationErrors);
 
     if (Object.keys(validationErrors).length > 0) {
-      // Rola até o primeiro campo com erro para orientar o professor
       const firstErrorField = Object.keys(validationErrors)[0];
       document.getElementById(firstErrorField)?.focus();
       return;
     }
 
-    // Validação aprovada — chamada à API será implementada na T10.
-    console.log("Dados do formulário:", form);
+    // ── T10: chamada à API ──────────────────────────────────────────
+    setIsLoading(true);
+    setApiError(null);
+    setResult(null);
+
+    try {
+      const response = await fetch("/api/planning", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+
+      if (!response.ok) {
+        setApiError("Não foi possível gerar o planejamento. Tente novamente.");
+        return;
+      }
+
+      const data: PlanningResult = await response.json();
+      setResult(data);
+    } catch {
+      setApiError("Erro de conexão. Verifique sua internet e tente novamente.");
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -606,21 +630,54 @@ export default function PlanejamentoPage() {
 
           {/* ── Botão de envio ── */}
           <div className="flex flex-col items-center gap-3 pt-2 pb-10">
+            {apiError && (
+              <p role="alert" className="text-sm text-red-500 text-center">
+                {apiError}
+              </p>
+            )}
             <Button
               type="submit"
-              className="w-full sm:w-auto px-8 py-2.5 h-auto text-base font-semibold rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-sm gap-2 transition-colors"
+              disabled={isLoading}
+              className="w-full sm:w-auto px-8 py-2.5 h-auto text-base font-semibold rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-sm gap-2 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                className="w-4 h-4" aria-hidden="true">
-                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-              </svg>
-              Gerar Planejamento
+              {isLoading ? (
+                <>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                    className="w-4 h-4 animate-spin" aria-hidden="true"
+                  >
+                    <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                  </svg>
+                  Gerando...
+                </>
+              ) : (
+                <>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                    className="w-4 h-4" aria-hidden="true">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                  </svg>
+                  Gerar Planejamento
+                </>
+              )}
             </Button>
             <p className="text-xs text-slate-400 text-center max-w-sm">
               O resultado gerado é uma sugestão. Você poderá revisar e editar antes de usar.
             </p>
           </div>
+
+          {/* ── Resultado provisório (T11 implementará o componente completo) ── */}
+          {result && (
+            <div className="bg-green-50 border border-green-200 rounded-2xl p-6 mb-8">
+              <p className="text-sm font-medium text-green-800">
+                ✓ Planejamento gerado com sucesso.
+              </p>
+              <p className="text-xs text-green-600 mt-1">
+                {result.identificacao}
+              </p>
+            </div>
+          )}
 
         </form>
       </main>
