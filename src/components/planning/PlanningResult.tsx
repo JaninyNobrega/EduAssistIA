@@ -2,483 +2,310 @@
 
 import { useState } from "react";
 import type { PlanningResult as PlanningResultType } from "@/lib/types";
-import { SectionCard } from "@/components/planning/SectionCard";
 import { generatePdf } from "@/lib/generatePdf";
 
-/**
- * Serializa string[] → string com itens separados por \n (para edição em textarea).
- */
-function listToText(items: string[]): string {
-  return items.join("\n");
-}
+// ─── Helpers de serialização (edição) ────────────────────────────────────────
 
-/**
- * Deserializa string → string[], descartando linhas vazias.
- */
+function listToText(items: string[]): string { return items.join("\n"); }
 function textToList(text: string): string[] {
-  return text
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean);
+  return text.split("\n").map((l) => l.trim()).filter(Boolean);
 }
 
-/**
- * Formata o planejamento completo como texto simples para cópia.
- * Cada seção recebe um título em caixa alta e separadores para facilitar
- * a leitura quando colado em qualquer editor de texto.
- *
- * Requisito: RF10
- */
+// ─── Formatar para cópia ─────────────────────────────────────────────────────
+
 function formatAsText(r: PlanningResultType): string {
   const sep = "─".repeat(48);
   const lines: string[] = [];
-
   lines.push(r.identificacao.toUpperCase());
   lines.push(`Turma: ${r.turma} | Faixa etária: ${r.faixaEtaria} | Tema: ${r.tema}`);
-  lines.push("");
-
-  lines.push(sep);
-  lines.push("CAMPO DE EXPERIÊNCIA");
-  lines.push(r.campoExperiencia);
-  lines.push("");
-
-  lines.push(sep);
-  lines.push("DIREITOS DE APRENDIZAGEM");
-  r.direitosAprendizagem.forEach((d) => lines.push(`• ${d}`));
-  lines.push("");
-
-  lines.push(sep);
-  lines.push("OBJETIVO DE APRENDIZAGEM");
-  lines.push(r.objetivoAprendizagem);
-  lines.push("");
-
-  lines.push(sep);
-  lines.push("VIVÊNCIA DE APRENDIZAGEM");
-  lines.push(r.vivenciaAprendizagem);
-  lines.push("");
-
-  lines.push(sep);
-  lines.push("METODOLOGIA");
-  r.metodologia.forEach((etapa, i) => lines.push(`${i + 1}. ${etapa}`));
-  lines.push("");
-
-  lines.push(sep);
-  lines.push("MATERIAIS NECESSÁRIOS");
-  r.materiaisNecessarios.forEach((m) => lines.push(`• ${m}`));
-  lines.push("");
-
-  lines.push(sep);
-  lines.push("AVALIAÇÃO POR OBSERVAÇÃO");
-  lines.push(r.avaliacaoObservacao);
-  lines.push("");
-
-  lines.push(sep);
-  lines.push("ADAPTAÇÕES POSSÍVEIS");
-  r.adaptacoesPossiveis.forEach((a) => lines.push(`• ${a}`));
-  lines.push("");
-
-  lines.push(sep);
-  lines.push("OBSERVAÇÃO FINAL");
-  lines.push(r.observacaoFinal);
-
+  lines.push(""); lines.push(sep); lines.push("CAMPO DE EXPERIÊNCIA"); lines.push(r.campoExperiencia);
+  lines.push(""); lines.push(sep); lines.push("DIREITOS DE APRENDIZAGEM"); r.direitosAprendizagem.forEach((d) => lines.push(`• ${d}`));
+  lines.push(""); lines.push(sep); lines.push("OBJETIVO DE APRENDIZAGEM"); lines.push(r.objetivoAprendizagem);
+  lines.push(""); lines.push(sep); lines.push("VIVÊNCIA DE APRENDIZAGEM"); lines.push(r.vivenciaAprendizagem);
+  lines.push(""); lines.push(sep); lines.push("METODOLOGIA"); r.metodologia.forEach((e, i) => lines.push(`${i + 1}. ${e}`));
+  lines.push(""); lines.push(sep); lines.push("MATERIAIS NECESSÁRIOS"); r.materiaisNecessarios.forEach((m) => lines.push(`• ${m}`));
+  lines.push(""); lines.push(sep); lines.push("AVALIAÇÃO POR OBSERVAÇÃO"); lines.push(r.avaliacaoObservacao);
+  lines.push(""); lines.push(sep); lines.push("ADAPTAÇÕES POSSÍVEIS"); r.adaptacoesPossiveis.forEach((a) => lines.push(`• ${a}`));
+  lines.push(""); lines.push(sep); lines.push("OBSERVAÇÃO FINAL"); lines.push(r.observacaoFinal);
   return lines.join("\n");
 }
 
+// ─── DocSection: seção leve dentro do documento único ────────────────────────
+
 /**
- * Componente de exibição e edição do planejamento pedagógico gerado.
+ * Substituiu o SectionCard.
+ * Sem card individual — apenas título, separador discreto e conteúdo.
+ * Botão "Editar" discreto à direita do título.
+ * Em modo de edição exibe textarea + Salvar / Cancelar.
+ */
+function DocSection({
+  title,
+  sectionKey,
+  editingSection,
+  currentValue,
+  onEdit,
+  onSave,
+  onCancel,
+  children,
+}: {
+  title: string;
+  sectionKey: string;
+  editingSection: string | null;
+  currentValue: string;
+  onEdit: (key: string) => void;
+  onSave: (key: string, value: string) => void;
+  onCancel: () => void;
+  children: React.ReactNode;
+}) {
+  const [draft, setDraft] = useState("");
+  const isEditing = editingSection === sectionKey;
+
+  function handleEditClick() { setDraft(currentValue); onEdit(sectionKey); }
+
+  return (
+    <div className="py-4">
+      {/* Título da seção + botão Editar */}
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="text-xs font-semibold text-blue-600 uppercase tracking-widest">
+          {title}
+        </h3>
+        {!isEditing && (
+          <button type="button" onClick={handleEditClick}
+            className="text-xs text-slate-400 hover:text-blue-600 transition-colors flex items-center gap-1"
+            aria-label={`Editar ${title}`}>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+              className="w-3 h-3" aria-hidden="true">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+            </svg>
+            Editar
+          </button>
+        )}
+      </div>
+
+      {/* Conteúdo: leitura ou edição */}
+      {isEditing ? (
+        <div className="flex flex-col gap-2">
+          <textarea value={draft} onChange={(e) => setDraft(e.target.value)} rows={5} autoFocus
+            className="w-full rounded-xl border border-input bg-white px-3 py-2 text-sm text-slate-700 outline-none resize-none focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500/20 leading-relaxed shadow-sm"
+            aria-label={`Editar ${title}`} />
+          {currentValue.includes("\n") && (
+            <p className="text-xs text-slate-400">Cada linha representa um item separado.</p>
+          )}
+          <div className="flex gap-2">
+            <button type="button" onClick={() => onSave(sectionKey, draft)}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-1.5 transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                className="w-3.5 h-3.5" aria-hidden="true"><polyline points="20 6 9 17 4 12" /></svg>
+              Salvar
+            </button>
+            <button type="button" onClick={onCancel}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-sm font-medium px-4 py-1.5 transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                className="w-3.5 h-3.5" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+              Cancelar
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div>{children}</div>
+      )}
+
+      {/* Separador discreto */}
+      <div className="mt-4 border-b border-slate-100" aria-hidden="true" />
+    </div>
+  );
+}
+
+// ─── Componente principal ─────────────────────────────────────────────────────
+
+/**
+ * UX-R02: apresentação como documento pedagógico único.
+ * - Um único card branco contendo todas as seções
+ * - Separadores discretos entre seções
+ * - Títulos em azul pequeno, sem ícones em excesso
+ * - Botões Copiar / Exportar PDF ao lado do título do documento
+ * - Edição por seção preservada (T12)
  *
- * - Cada seção possui um botão "Editar" discreto no cabeçalho.
- * - Apenas uma seção fica em edição por vez.
- * - A edição ocorre apenas em memória (sem API, sem banco).
- * - Textos simples → textarea; listas → textarea com um item por linha.
- *
- * Requisitos: RF08, RF09, RB02
+ * Requisitos: RF08, RF09, RF10, RB02, UX02, UX03, UX07
  */
 export function PlanningResult({ result: initialResult }: { result: PlanningResultType }) {
-  // Estado do planejamento — mutável apenas em memória
   const [result, setResult] = useState<PlanningResultType>(initialResult);
-
-  // Qual seção está em edição (null = nenhuma)
   const [editingSection, setEditingSection] = useState<string | null>(null);
-
-  // Estado do botão de cópia: idle | copied | error
   const [copyState, setCopyState] = useState<"idle" | "copied" | "error">("idle");
-
-  // Estado do botão de PDF: idle | generating | error
   const [pdfState, setPdfState] = useState<"idle" | "generating" | "error">("idle");
 
-  /** Abre o modo de edição para uma seção. */
-  function handleEdit(key: string) {
-    setEditingSection(key);
-  }
+  function handleEdit(key: string) { setEditingSection(key); }
+  function handleCancel() { setEditingSection(null); }
 
-  /** Salva o rascunho: atualiza o resultado em memória e fecha a edição. */
   function handleSave(key: string, value: string) {
     setResult((prev) => {
       const updated = { ...prev };
-
-      // Campos que são listas (string[])
-      const listFields: (keyof PlanningResultType)[] = [
-        "direitosAprendizagem",
-        "metodologia",
-        "materiaisNecessarios",
-        "adaptacoesPossiveis",
-      ];
-
-      if (listFields.includes(key as keyof PlanningResultType)) {
-        (updated as Record<string, unknown>)[key] = textToList(value);
-      } else {
-        (updated as Record<string, unknown>)[key] = value;
-      }
-
+      const listFields: (keyof PlanningResultType)[] = ["direitosAprendizagem", "metodologia", "materiaisNecessarios", "adaptacoesPossiveis"];
+      (updated as Record<string, unknown>)[key] = listFields.includes(key as keyof PlanningResultType) ? textToList(value) : value;
       return updated;
     });
-
     setEditingSection(null);
   }
 
-  /** Descarta o rascunho e fecha a edição. */
-  function handleCancel() {
-    setEditingSection(null);
-  }
-
-  /** Copia o planejamento formatado para a área de transferência. RF10 */
   async function handleCopy() {
-    try {
-      await navigator.clipboard.writeText(formatAsText(result));
-      setCopyState("copied");
-    } catch {
-      setCopyState("error");
-    } finally {
-      setTimeout(() => setCopyState("idle"), 3000);
-    }
+    try { await navigator.clipboard.writeText(formatAsText(result)); setCopyState("copied"); }
+    catch { setCopyState("error"); }
+    finally { setTimeout(() => setCopyState("idle"), 3000); }
   }
 
-  /** Gera e faz o download do planejamento em PDF. RF10 */
   async function handleExportPdf() {
     setPdfState("generating");
-    try {
-      await generatePdf(result);
-      setPdfState("idle");
-    } catch {
-      setPdfState("error");
-      setTimeout(() => setPdfState("idle"), 3000);
-    }
+    try { await generatePdf(result); setPdfState("idle"); }
+    catch { setPdfState("error"); setTimeout(() => setPdfState("idle"), 3000); }
   }
 
-  /**
-   * Monta o editConfig para cada seção, centralizando a lógica de edição.
-   * Campos lista são serializados com listToText para exibição no textarea.
-   */
-  function editConfig(sectionKey: string, value: string | string[]) {
-    const currentValue = Array.isArray(value) ? listToText(value) : value;
-    return {
-      sectionKey,
-      currentValue,
-      editingSection,
-      onEdit: handleEdit,
-      onSave: handleSave,
-      onCancel: handleCancel,
-    };
+  function ec(sectionKey: string, value: string | string[]) {
+    return { sectionKey, currentValue: Array.isArray(value) ? listToText(value) : value, editingSection, onEdit: handleEdit, onSave: handleSave, onCancel: handleCancel };
   }
 
   return (
-    <section aria-label="Planejamento gerado" className="flex flex-col gap-4 mt-2 mb-10">
+    <section aria-label="Planejamento gerado" className="mt-2 mb-10">
+      {/* Documento único */}
+      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
 
-      {/* Cabeçalho do resultado — identificação (não editável) */}
-      <div className="bg-blue-600 rounded-2xl p-6 text-white shadow-md">
-        <div className="flex items-center gap-2 mb-1">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-            className="w-4 h-4 opacity-80" aria-hidden="true">
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-            <polyline points="22 4 12 14.01 9 11.01" />
-          </svg>
-          <span className="text-sm font-medium opacity-90">Planejamento gerado com sucesso</span>
+        {/* Topo do documento: identificação + ações */}
+        <div className="px-6 pt-6 pb-4 border-b border-slate-100">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-xs text-blue-600 font-semibold uppercase tracking-widest mb-1">
+                Planejamento Pedagógico
+              </p>
+              <h2 className="text-base font-bold text-slate-900 leading-snug">{result.identificacao}</h2>
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {[result.turma, result.faixaEtaria, result.tema].map((tag) => (
+                  <span key={tag} className="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">{tag}</span>
+                ))}
+              </div>
+            </div>
+
+            {/* Ações — ao lado do título */}
+            <div className="flex items-center gap-2 shrink-0 pt-0.5">
+              <button type="button" onClick={handleCopy} aria-live="polite"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 text-slate-600 text-xs font-medium px-3 py-1.5 transition-colors">
+                {copyState === "copied" ? (
+                  <><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5 text-blue-600" aria-hidden="true"><polyline points="20 6 9 17 4 12" /></svg>Copiado!</>
+                ) : copyState === "error" ? "Erro" : (
+                  <><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>Copiar</>
+                )}
+              </button>
+              <button type="button" onClick={handleExportPdf} disabled={pdfState === "generating"} aria-live="polite"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
+                {pdfState === "generating" ? (
+                  <><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5 animate-spin" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>Gerando...</>
+                ) : pdfState === "error" ? "Erro ao gerar" : (
+                  <><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="12" y1="18" x2="12" y2="12" /><line x1="9" y1="15" x2="15" y2="15" /></svg>PDF</>
+                )}
+              </button>
+            </div>
+          </div>
         </div>
-        <h2 className="text-lg font-bold leading-snug">{result.identificacao}</h2>
-        <div className="flex flex-wrap gap-2 mt-3">
-          <span className="inline-flex items-center rounded-lg bg-white/20 px-2.5 py-1 text-xs font-medium">
-            {result.turma}
-          </span>
-          <span className="inline-flex items-center rounded-lg bg-white/20 px-2.5 py-1 text-xs font-medium">
-            {result.faixaEtaria}
-          </span>
-          <span className="inline-flex items-center rounded-lg bg-white/20 px-2.5 py-1 text-xs font-medium">
-            {result.tema}
-          </span>
-        </div>
 
-        {/* Botões de ação — RF10 */}
-        <div className="mt-4 flex flex-wrap items-center gap-3">
-          {/* Copiar */}
-          <button
-            type="button"
-            onClick={handleCopy}
-            className="inline-flex items-center gap-2 rounded-xl bg-white/20 hover:bg-white/30 text-white text-sm font-semibold px-4 py-2 transition-colors"
-            aria-live="polite"
-          >
-            {copyState === "copied" ? (
-              <>
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-                  className="w-4 h-4" aria-hidden="true">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-                Planejamento copiado!
-              </>
-            ) : copyState === "error" ? (
-              <>
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                  className="w-4 h-4" aria-hidden="true">
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="12" y1="8" x2="12" y2="12" />
-                  <line x1="12" y1="16" x2="12.01" y2="16" />
-                </svg>
-                Não foi possível copiar
-              </>
-            ) : (
-              <>
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                  className="w-4 h-4" aria-hidden="true">
-                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                </svg>
-                Copiar planejamento
-              </>
-            )}
-          </button>
+        {/* Corpo do documento: seções */}
+        <div className="px-6 divide-y-0">
+          <DocSection title="Campo de Experiência" {...ec("campoExperiencia", result.campoExperiencia)}>
+            <p className="text-sm text-slate-700 leading-relaxed">{result.campoExperiencia}</p>
+          </DocSection>
 
-          {/* Exportar PDF */}
-          <button
-            type="button"
-            onClick={handleExportPdf}
-            disabled={pdfState === "generating"}
-            className="inline-flex items-center gap-2 rounded-xl bg-white/20 hover:bg-white/30 text-white text-sm font-semibold px-4 py-2 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-            aria-live="polite"
-          >
-            {pdfState === "generating" ? (
-              <>
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                  className="w-4 h-4 animate-spin" aria-hidden="true">
-                  <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-                </svg>
-                Gerando PDF...
-              </>
-            ) : pdfState === "error" ? (
-              <>
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                  className="w-4 h-4" aria-hidden="true">
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="12" y1="8" x2="12" y2="12" />
-                  <line x1="12" y1="16" x2="12.01" y2="16" />
-                </svg>
-                Erro ao gerar PDF
-              </>
+          <DocSection title="Direitos de Aprendizagem" {...ec("direitosAprendizagem", result.direitosAprendizagem)}>
+            <div className="flex flex-wrap gap-1.5">
+              {result.direitosAprendizagem.map((d) => (
+                <span key={d} className="inline-flex items-center rounded-md bg-blue-50 border border-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-700">{d}</span>
+              ))}
+            </div>
+          </DocSection>
+
+          <DocSection title="Objetivo de Aprendizagem" {...ec("objetivoAprendizagem", result.objetivoAprendizagem)}>
+            <p className="text-sm text-slate-700 leading-relaxed">{result.objetivoAprendizagem}</p>
+          </DocSection>
+
+          <DocSection title="Vivência de Aprendizagem" {...ec("vivenciaAprendizagem", result.vivenciaAprendizagem)}>
+            <p className="text-sm text-slate-700 leading-relaxed">{result.vivenciaAprendizagem}</p>
+          </DocSection>
+
+          <DocSection title="Metodologia" {...ec("metodologia", result.metodologia)}>
+            <ol className="flex flex-col gap-1.5">
+              {result.metodologia.map((etapa, i) => (
+                <li key={i} className="flex items-start gap-2.5">
+                  <span className="flex items-center justify-center w-4 h-4 rounded-full bg-blue-100 text-blue-700 text-[10px] font-bold shrink-0 mt-0.5">{i + 1}</span>
+                  <span className="text-sm text-slate-700 leading-relaxed">{etapa}</span>
+                </li>
+              ))}
+            </ol>
+          </DocSection>
+
+          <DocSection title="Materiais Necessários" {...ec("materiaisNecessarios", result.materiaisNecessarios)}>
+            <ul className="flex flex-col gap-1">
+              {result.materiaisNecessarios.map((m, i) => (
+                <li key={i} className="flex items-center gap-2 text-sm text-slate-700">
+                  <span className="w-1 h-1 rounded-full bg-blue-400 shrink-0" aria-hidden="true" />{m}
+                </li>
+              ))}
+            </ul>
+          </DocSection>
+
+          <DocSection title="Avaliação por Observação" {...ec("avaliacaoObservacao", result.avaliacaoObservacao)}>
+            <p className="text-sm text-slate-700 leading-relaxed">{result.avaliacaoObservacao}</p>
+          </DocSection>
+
+          <DocSection title="Adaptações Possíveis" {...ec("adaptacoesPossiveis", result.adaptacoesPossiveis)}>
+            <ul className="flex flex-col gap-1.5">
+              {result.adaptacoesPossiveis.map((a, i) => (
+                <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
+                  <span className="w-1 h-1 rounded-full bg-slate-400 shrink-0 mt-2" aria-hidden="true" />
+                  <span className="leading-relaxed">{a}</span>
+                </li>
+              ))}
+            </ul>
+          </DocSection>
+
+          {/* Última seção — sem separador no final */}
+          <div className="py-4">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-xs font-semibold text-blue-600 uppercase tracking-widest">Observação Final</h3>
+              {editingSection !== "observacaoFinal" && (
+                <button type="button" onClick={() => { setEditingSection("observacaoFinal"); }}
+                  className="text-xs text-slate-400 hover:text-blue-600 transition-colors flex items-center gap-1" aria-label="Editar Observação Final">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
+                  Editar
+                </button>
+              )}
+            </div>
+            {editingSection === "observacaoFinal" ? (
+              <ObsFinalEditor value={result.observacaoFinal} onSave={(v) => handleSave("observacaoFinal", v)} onCancel={handleCancel} />
             ) : (
-              <>
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                  className="w-4 h-4" aria-hidden="true">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                  <polyline points="14 2 14 8 20 8" />
-                  <line x1="12" y1="18" x2="12" y2="12" />
-                  <line x1="9" y1="15" x2="15" y2="15" />
-                </svg>
-                Exportar PDF
-              </>
+              <p className="text-sm text-slate-500 leading-relaxed italic">{result.observacaoFinal}</p>
             )}
-          </button>
+          </div>
         </div>
       </div>
-
-      {/* Campo de Experiência */}
-      <SectionCard
-        title="Campo de Experiência"
-        editConfig={editConfig("campoExperiencia", result.campoExperiencia)}
-        icon={
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-            className="w-4 h-4" aria-hidden="true">
-            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-          </svg>
-        }
-      >
-        <p className="text-sm text-slate-700 leading-relaxed">{result.campoExperiencia}</p>
-      </SectionCard>
-
-      {/* Direitos de Aprendizagem */}
-      <SectionCard
-        title="Direitos de Aprendizagem"
-        editConfig={editConfig("direitosAprendizagem", result.direitosAprendizagem)}
-        icon={
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-            className="w-4 h-4" aria-hidden="true">
-            <polyline points="9 11 12 14 22 4" />
-            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
-          </svg>
-        }
-      >
-        <div className="flex flex-wrap gap-2">
-          {result.direitosAprendizagem.map((direito) => (
-            <span
-              key={direito}
-              className="inline-flex items-center rounded-lg bg-blue-50 border border-blue-100 px-3 py-1 text-xs font-medium text-blue-700"
-            >
-              {direito}
-            </span>
-          ))}
-        </div>
-      </SectionCard>
-
-      {/* Objetivo de Aprendizagem */}
-      <SectionCard
-        title="Objetivo de Aprendizagem"
-        editConfig={editConfig("objetivoAprendizagem", result.objetivoAprendizagem)}
-        icon={
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-            className="w-4 h-4" aria-hidden="true">
-            <circle cx="12" cy="12" r="10" />
-            <circle cx="12" cy="12" r="3" />
-          </svg>
-        }
-      >
-        <p className="text-sm text-slate-700 leading-relaxed">{result.objetivoAprendizagem}</p>
-      </SectionCard>
-
-      {/* Vivência de Aprendizagem */}
-      <SectionCard
-        title="Vivência de Aprendizagem"
-        editConfig={editConfig("vivenciaAprendizagem", result.vivenciaAprendizagem)}
-        icon={
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-            className="w-4 h-4" aria-hidden="true">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-            <circle cx="9" cy="7" r="4" />
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-          </svg>
-        }
-      >
-        <p className="text-sm text-slate-700 leading-relaxed">{result.vivenciaAprendizagem}</p>
-      </SectionCard>
-
-      {/* Metodologia */}
-      <SectionCard
-        title="Metodologia"
-        editConfig={editConfig("metodologia", result.metodologia)}
-        icon={
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-            className="w-4 h-4" aria-hidden="true">
-            <line x1="8" y1="6" x2="21" y2="6" />
-            <line x1="8" y1="12" x2="21" y2="12" />
-            <line x1="8" y1="18" x2="21" y2="18" />
-            <line x1="3" y1="6" x2="3.01" y2="6" />
-            <line x1="3" y1="12" x2="3.01" y2="12" />
-            <line x1="3" y1="18" x2="3.01" y2="18" />
-          </svg>
-        }
-      >
-        <ol className="flex flex-col gap-2">
-          {result.metodologia.map((etapa, i) => (
-            <li key={i} className="flex items-start gap-3">
-              <span className="flex items-center justify-center w-5 h-5 rounded-full bg-blue-100 text-blue-700 text-xs font-semibold shrink-0 mt-0.5">
-                {i + 1}
-              </span>
-              <span className="text-sm text-slate-700 leading-relaxed">{etapa}</span>
-            </li>
-          ))}
-        </ol>
-      </SectionCard>
-
-      {/* Materiais Necessários */}
-      <SectionCard
-        title="Materiais Necessários"
-        editConfig={editConfig("materiaisNecessarios", result.materiaisNecessarios)}
-        icon={
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-            className="w-4 h-4" aria-hidden="true">
-            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
-          </svg>
-        }
-      >
-        <ul className="flex flex-col gap-1.5">
-          {result.materiaisNecessarios.map((material, i) => (
-            <li key={i} className="flex items-center gap-2 text-sm text-slate-700">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0" aria-hidden="true" />
-              {material}
-            </li>
-          ))}
-        </ul>
-      </SectionCard>
-
-      {/* Avaliação por Observação */}
-      <SectionCard
-        title="Avaliação por Observação"
-        editConfig={editConfig("avaliacaoObservacao", result.avaliacaoObservacao)}
-        icon={
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-            className="w-4 h-4" aria-hidden="true">
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-            <circle cx="12" cy="12" r="3" />
-          </svg>
-        }
-      >
-        <p className="text-sm text-slate-700 leading-relaxed">{result.avaliacaoObservacao}</p>
-      </SectionCard>
-
-      {/* Adaptações Possíveis */}
-      <SectionCard
-        title="Adaptações Possíveis"
-        editConfig={editConfig("adaptacoesPossiveis", result.adaptacoesPossiveis)}
-        icon={
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-            className="w-4 h-4" aria-hidden="true">
-            <circle cx="12" cy="12" r="3" />
-            <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
-            <path d="M4.93 4.93a10 10 0 0 0 0 14.14" />
-          </svg>
-        }
-      >
-        <ul className="flex flex-col gap-2">
-          {result.adaptacoesPossiveis.map((adaptacao, i) => (
-            <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
-              <span className="w-1.5 h-1.5 rounded-full bg-slate-400 shrink-0 mt-2" aria-hidden="true" />
-              <span className="leading-relaxed">{adaptacao}</span>
-            </li>
-          ))}
-        </ul>
-      </SectionCard>
-
-      {/* Observação Final */}
-      <SectionCard
-        title="Observação Final"
-        editConfig={editConfig("observacaoFinal", result.observacaoFinal)}
-        icon={
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-            className="w-4 h-4" aria-hidden="true">
-            <circle cx="12" cy="12" r="10" />
-            <line x1="12" y1="8" x2="12" y2="12" />
-            <line x1="12" y1="16" x2="12.01" y2="16" />
-          </svg>
-        }
-      >
-        <p className="text-sm text-slate-500 leading-relaxed italic">{result.observacaoFinal}</p>
-      </SectionCard>
-
     </section>
+  );
+}
+
+// Editor simples para observacaoFinal (campo sem spread de editConfig)
+function ObsFinalEditor({ value, onSave, onCancel }: { value: string; onSave: (v: string) => void; onCancel: () => void }) {
+  const [draft, setDraft] = useState(value);
+  return (
+    <div className="flex flex-col gap-2">
+      <textarea value={draft} onChange={(e) => setDraft(e.target.value)} rows={4} autoFocus
+        className="w-full rounded-xl border border-input bg-white px-3 py-2 text-sm text-slate-700 outline-none resize-none focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500/20 leading-relaxed shadow-sm" />
+      <div className="flex gap-2">
+        <button type="button" onClick={() => onSave(draft)} className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-1.5 transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5" aria-hidden="true"><polyline points="20 6 9 17 4 12" /></svg>Salvar
+        </button>
+        <button type="button" onClick={onCancel} className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-sm font-medium px-4 py-1.5 transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>Cancelar
+        </button>
+      </div>
+    </div>
   );
 }
