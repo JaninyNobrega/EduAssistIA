@@ -14,12 +14,27 @@ import { PlanningResult as PlanningResultComponent } from "@/components/planning
 
 const TURMAS = ["Berçário", "Maternal I", "Maternal II", "Infantil I", "Infantil II"] as const;
 const FAIXAS_ETARIAS = ["0 a 1 ano", "1 a 2 anos", "2 a 3 anos", "3 a 4 anos", "4 a 5 anos"] as const;
+
+/**
+ * UX-R03: mapeamento automático turma → faixa etária conforme BNCC.
+ * Elimina preenchimento redundante e evita combinações incoerentes.
+ */
+const TURMA_FAIXA_ETARIA: Record<string, string> = {
+  "Berçário":   "0 a 1 ano",
+  "Maternal I": "1 a 2 anos",
+  "Maternal II":"2 a 3 anos",
+  "Infantil I": "3 a 4 anos",
+  "Infantil II":"4 a 5 anos",
+};
 const TURNOS = ["Manhã", "Tarde", "Integral"] as const;
+
+/** UX-R04: lista atualizada de tipos de atividade para Educação Infantil */
 const TIPOS_ATIVIDADE = [
-  "Contação de história", "Música", "Pintura", "Colagem",
+  "Contação de história", "Musicalização", "Pintura", "Colagem", "Desenho",
   "Movimento corporal", "Exploração sensorial", "Brincadeira orientada",
-  "Atividade com materiais concretos", "Roda de conversa",
+  "Roda de conversa", "Dramatização", "Atividade com materiais concretos",
 ] as const;
+
 const DURACOES = ["20 minutos", "30 minutos", "40 minutos", "50 minutos"] as const;
 const CAMPOS_EXPERIENCIA = [
   "O eu, o outro e o nós", "Corpo, gestos e movimentos", "Traços, sons, cores e formas",
@@ -27,6 +42,21 @@ const CAMPOS_EXPERIENCIA = [
   "Espaços, tempos, quantidades, relações e transformações",
 ] as const;
 const DIREITOS_APRENDIZAGEM = ["Conviver", "Brincar", "Participar", "Explorar", "Expressar", "Conhecer-se"] as const;
+
+/** UX-R04: sugestões de tema para Educação Infantil */
+const TEMAS_SUGERIDOS = [
+  "Animais", "Cores", "Formas", "Família", "Natureza",
+  "Corpo e movimentos", "Alimentação", "Música e sons",
+  "Água", "Meio ambiente", "Folclore", "Identidade e emoções",
+] as const;
+
+/** UX-R04: materiais selecionáveis para Educação Infantil */
+const MATERIAIS_OPCOES = [
+  "Papel", "Cartolina", "Tinta guache", "Pincel", "Giz de cera",
+  "Lápis de cor", "Cola", "EVA", "Massinha", "Livros",
+  "Figuras", "Brinquedos", "Instrumentos musicais",
+  "Materiais recicláveis", "Elementos da natureza",
+] as const;
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -104,9 +134,21 @@ export default function PlanejamentoPage() {
   // UX-R01: formulário oculto após geração
   const [showForm, setShowForm] = useState(true);
 
+  // UX-R04: estados locais para tema personalizado e materiais selecionáveis
+  const [temaCustom, setTemaCustom] = useState("");
+  const [materiaisSelecionados, setMateriaisSelecionados] = useState<string[]>([]);
+  const [materiaisOutro, setMateriaisOutro] = useState("");
+
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setForm((prev) => {
+      const next = { ...prev, [name]: value };
+      // UX-R03: inferência automática da faixa etária ao selecionar a turma
+      if (name === "turma") {
+        next.faixaEtaria = TURMA_FAIXA_ETARIA[value] ?? "";
+      }
+      return next;
+    });
   }
 
   function handleCheckboxList(field: "direitosAprendizagem" | "tipoAtividade", value: string, checked: boolean) {
@@ -114,6 +156,41 @@ export default function PlanejamentoPage() {
       ...prev,
       [field]: checked ? [...prev[field], value] : prev[field].filter((v) => v !== value),
     }));
+  }
+
+  /** UX-R04: toggle de material selecionável — atualiza materiaisDisponiveis no form */
+  function handleMaterialToggle(material: string, checked: boolean) {
+    setMateriaisSelecionados((prev) => {
+      const next = checked ? [...prev, material] : prev.filter((m) => m !== material);
+      const todos = materiaisOutro.trim() ? [...next, materiaisOutro.trim()] : next;
+      setForm((f) => ({ ...f, materiaisDisponiveis: todos.join(", ") }));
+      return next;
+    });
+  }
+
+  /** UX-R04: campo "Outros materiais" — atualiza materiaisDisponiveis concatenando com selecionados */
+  function handleMateriaisOutro(e: React.ChangeEvent<HTMLInputElement>) {
+    const value = e.target.value;
+    setMateriaisOutro(value);
+    const todos = value.trim() ? [...materiaisSelecionados, value.trim()] : materiaisSelecionados;
+    setForm((prev) => ({ ...prev, materiaisDisponiveis: todos.join(", ") }));
+  }
+
+  /** UX-R04: selecionar tema sugerido ou limpar para "Outro tema" */
+  function handleTemaSelect(tema: string) {
+    if (tema === "__outro__") {
+      setForm((prev) => ({ ...prev, tema: temaCustom }));
+    } else {
+      setTemaCustom("");
+      setForm((prev) => ({ ...prev, tema }));
+    }
+  }
+
+  /** UX-R04: campo livre de "Outro tema" */
+  function handleTemaCustom(e: React.ChangeEvent<HTMLInputElement>) {
+    const value = e.target.value;
+    setTemaCustom(value);
+    setForm((prev) => ({ ...prev, tema: value }));
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -205,9 +282,20 @@ export default function PlanejamentoPage() {
                     <FieldError message={submitted ? errors.turma : undefined} />
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="faixaEtaria">Faixa Etária <span className="text-red-500" aria-label="obrigatório">*</span></Label>
-                    <SelectField id="faixaEtaria" name="faixaEtaria" value={form.faixaEtaria} onChange={handleChange} placeholder="Selecione a faixa etária" options={FAIXAS_ETARIAS} invalid={submitted && !!errors.faixaEtaria} />
-                    <FieldError message={submitted ? errors.faixaEtaria : undefined} />
+                    <Label htmlFor="faixaEtaria">Faixa Etária</Label>
+                    {/* UX-R03: somente-leitura, inferida a partir da turma */}
+                    <div
+                      id="faixaEtaria"
+                      aria-label="Faixa etária inferida automaticamente"
+                      className="h-9 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-1 text-sm text-slate-600 flex items-center"
+                    >
+                      {form.faixaEtaria || (
+                        <span className="text-slate-400 italic">Definida conforme a turma</span>
+                      )}
+                    </div>
+                    {form.faixaEtaria && (
+                      <p className="text-xs text-slate-400">Definida automaticamente conforme a turma.</p>
+                    )}
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <Label htmlFor="turno">Turno</Label>
@@ -215,7 +303,15 @@ export default function PlanejamentoPage() {
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <Label htmlFor="dataPeriodo">Data / Período</Label>
-                    <Input id="dataPeriodo" name="dataPeriodo" value={form.dataPeriodo} onChange={handleChange} placeholder="Ex: Semana 1 – Junho" className="h-9 rounded-xl shadow-sm" autoComplete="off" />
+                    {/* UX-R03: input type="date" nativo — sem biblioteca externa */}
+                    <input
+                      type="date"
+                      id="dataPeriodo"
+                      name="dataPeriodo"
+                      value={form.dataPeriodo}
+                      onChange={handleChange}
+                      className="h-9 w-full rounded-xl border border-input bg-white px-3 py-1 text-sm text-foreground shadow-sm transition-colors outline-none focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500/20"
+                    />
                   </div>
                 </div>
               </section>
@@ -224,8 +320,48 @@ export default function PlanejamentoPage() {
               <section aria-labelledby="secao-atividade" className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 flex flex-col gap-5">
                 <SectionTitle id="secao-atividade" icon={<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>}>Sobre a Atividade</SectionTitle>
                 <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="tema">Tema <span className="text-red-500" aria-label="obrigatório">*</span></Label>
-                  <Input id="tema" name="tema" value={form.tema} onChange={handleChange} placeholder="Ex: Cores, animais, família, natureza, formas, música..." className={`h-9 rounded-xl shadow-sm${submitted && errors.tema ? " border-red-400 focus-visible:border-red-400 focus-visible:ring-red-400/20" : ""}`} autoComplete="off" aria-invalid={submitted && !!errors.tema} />
+                  <Label>Tema <span className="text-red-500" aria-label="obrigatório">*</span></Label>
+                  {/* UX-R04: sugestões de tema para Educação Infantil */}
+                  <div className="flex flex-wrap gap-2" role="group" aria-label="Sugestões de tema">
+                    {TEMAS_SUGERIDOS.map((tema) => (
+                      <button
+                        key={tema}
+                        type="button"
+                        onClick={() => handleTemaSelect(tema)}
+                        className={`rounded-xl border px-3 py-1.5 text-sm font-medium transition-colors ${
+                          form.tema === tema && tema !== "__outro__"
+                            ? "bg-blue-600 border-blue-600 text-white"
+                            : "border-slate-200 bg-white text-slate-700 hover:bg-blue-50 hover:border-blue-300"
+                        }`}
+                      >
+                        {tema}
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => handleTemaSelect("__outro__")}
+                      className={`rounded-xl border px-3 py-1.5 text-sm font-medium transition-colors ${
+                        !TEMAS_SUGERIDOS.includes(form.tema as typeof TEMAS_SUGERIDOS[number]) && form.tema !== ""
+                          ? "bg-blue-600 border-blue-600 text-white"
+                          : "border-slate-200 bg-white text-slate-700 hover:bg-blue-50 hover:border-blue-300"
+                      }`}
+                    >
+                      Outro tema
+                    </button>
+                  </div>
+                  {/* Campo livre — aparece apenas ao clicar "Outro tema" */}
+                  {!TEMAS_SUGERIDOS.includes(form.tema as typeof TEMAS_SUGERIDOS[number]) && (
+                    <Input
+                      id="tema"
+                      name="tema"
+                      value={temaCustom}
+                      onChange={handleTemaCustom}
+                      placeholder="Descreva o tema..."
+                      className={`h-9 rounded-xl shadow-sm mt-1${submitted && errors.tema ? " border-red-400" : ""}`}
+                      autoComplete="off"
+                      aria-label="Descreva o tema"
+                    />
+                  )}
                   <FieldError message={submitted ? errors.tema : undefined} />
                 </div>
                 <fieldset>
@@ -275,9 +411,35 @@ export default function PlanejamentoPage() {
               {/* Seção 4 — Informações Adicionais */}
               <section aria-labelledby="secao-adicionais" className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 flex flex-col gap-5">
                 <SectionTitle id="secao-adicionais" icon={<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4" aria-hidden="true"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>}>Informações Adicionais</SectionTitle>
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="materiaisDisponiveis">Materiais Disponíveis</Label>
-                  <Input id="materiaisDisponiveis" name="materiaisDisponiveis" value={form.materiaisDisponiveis} onChange={handleChange} placeholder="Ex: Papel sulfite, lápis de cor, tesoura, cola..." className="h-9 rounded-xl shadow-sm" autoComplete="off" />
+                <div className="flex flex-col gap-2">
+                  <Label>Materiais Disponíveis</Label>
+                  {/* UX-R04: materiais selecionáveis para Educação Infantil */}
+                  <div className="flex flex-wrap gap-2" role="group" aria-label="Materiais disponíveis">
+                    {MATERIAIS_OPCOES.map((material) => (
+                      <button
+                        key={material}
+                        type="button"
+                        onClick={() => handleMaterialToggle(material, !materiaisSelecionados.includes(material))}
+                        className={`rounded-xl border px-3 py-1.5 text-sm font-medium transition-colors ${
+                          materiaisSelecionados.includes(material)
+                            ? "bg-blue-600 border-blue-600 text-white"
+                            : "border-slate-200 bg-white text-slate-700 hover:bg-blue-50 hover:border-blue-300"
+                        }`}
+                      >
+                        {material}
+                      </button>
+                    ))}
+                  </div>
+                  {/* Campo "Outros materiais" sempre visível como complemento */}
+                  <Input
+                    id="materiaisOutro"
+                    value={materiaisOutro}
+                    onChange={handleMateriaisOutro}
+                    placeholder="Outros materiais (opcional)..."
+                    className="h-9 rounded-xl shadow-sm"
+                    autoComplete="off"
+                    aria-label="Outros materiais"
+                  />
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <Label htmlFor="observacoes">Observações</Label>

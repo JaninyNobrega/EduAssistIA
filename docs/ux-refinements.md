@@ -15,7 +15,7 @@ Este documento complementa o **Design System**, descrevendo comportamentos da in
 ---
 
 # Princípios Gerais de UX
-g
+
 Toda evolução da interface deverá respeitar os seguintes princípios.
 
 ## UXP01 — O professor deve pensar na aula, não no sistema
