@@ -339,8 +339,8 @@ export function PlanningResult({
       <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
         {/* Topo do documento: identificação + ações */}
         <div className="px-6 pt-6 pb-4 border-b border-slate-100">
-          <div className="flex items-start justify-between gap-4">
-            <div>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
               <p className="text-xs text-blue-600 font-semibold uppercase tracking-widest mb-1">
                 Planejamento Pedagógico
               </p>
@@ -407,12 +407,12 @@ export function PlanningResult({
             </div>
 
             {/* Ações — ao lado do título */}
-            <div className="flex items-center gap-2 shrink-0 pt-0.5">
+            <div className="flex flex-wrap items-center gap-2 sm:shrink-0 sm:pt-0.5">
               <button
                 type="button"
                 onClick={handleCopy}
                 aria-live="polite"
-                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 text-slate-600 text-xs font-medium px-3 py-1.5 transition-colors"
+                className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 shadow-sm transition-all hover:border-blue-200 hover:bg-blue-50/60 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/20"
               >
                 {copyState === "copied" ? (
                   <>
@@ -458,7 +458,7 @@ export function PlanningResult({
                 onClick={handleExportPdf}
                 disabled={pdfState === "generating"}
                 aria-live="polite"
-                className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition-all hover:bg-blue-700 hover:shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {pdfState === "generating" ? (
                   <>
@@ -497,7 +497,7 @@ export function PlanningResult({
                       <line x1="12" y1="18" x2="12" y2="12" />
                       <line x1="9" y1="15" x2="15" y2="15" />
                     </svg>
-                    PDF
+                    Exportar PDF
                   </>
                 )}
               </button>
