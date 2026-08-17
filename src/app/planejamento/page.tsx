@@ -135,6 +135,7 @@ export default function PlanejamentoPage() {
   const [showForm, setShowForm] = useState(true);
 
   // UX-R04: estados locais para tema personalizado e materiais selecionáveis
+  const [isOutroTema, setIsOutroTema] = useState(false);
   const [temaCustom, setTemaCustom] = useState("");
   const [materiaisSelecionados, setMateriaisSelecionados] = useState<string[]>([]);
   const [materiaisOutro, setMateriaisOutro] = useState("");
@@ -176,11 +177,13 @@ export default function PlanejamentoPage() {
     setForm((prev) => ({ ...prev, materiaisDisponiveis: todos.join(", ") }));
   }
 
-  /** UX-R04: selecionar tema sugerido ou limpar para "Outro tema" */
+  /** UX-R04: selecionar tema sugerido ou alternar para outro tema */
   function handleTemaSelect(tema: string) {
     if (tema === "__outro__") {
+      setIsOutroTema(true);
       setForm((prev) => ({ ...prev, tema: temaCustom }));
     } else {
+      setIsOutroTema(false);
       setTemaCustom("");
       setForm((prev) => ({ ...prev, tema }));
     }
@@ -329,7 +332,7 @@ export default function PlanejamentoPage() {
                         type="button"
                         onClick={() => handleTemaSelect(tema)}
                         className={`rounded-xl border px-3 py-1.5 text-sm font-medium transition-colors ${
-                          form.tema === tema && tema !== "__outro__"
+                          !isOutroTema && form.tema === tema
                             ? "bg-blue-600 border-blue-600 text-white"
                             : "border-slate-200 bg-white text-slate-700 hover:bg-blue-50 hover:border-blue-300"
                         }`}
@@ -341,7 +344,7 @@ export default function PlanejamentoPage() {
                       type="button"
                       onClick={() => handleTemaSelect("__outro__")}
                       className={`rounded-xl border px-3 py-1.5 text-sm font-medium transition-colors ${
-                        !TEMAS_SUGERIDOS.includes(form.tema as typeof TEMAS_SUGERIDOS[number]) && form.tema !== ""
+                        isOutroTema
                           ? "bg-blue-600 border-blue-600 text-white"
                           : "border-slate-200 bg-white text-slate-700 hover:bg-blue-50 hover:border-blue-300"
                       }`}
@@ -350,7 +353,7 @@ export default function PlanejamentoPage() {
                     </button>
                   </div>
                   {/* Campo livre — aparece apenas ao clicar "Outro tema" */}
-                  {!TEMAS_SUGERIDOS.includes(form.tema as typeof TEMAS_SUGERIDOS[number]) && (
+                  {isOutroTema && (
                     <Input
                       id="tema"
                       name="tema"

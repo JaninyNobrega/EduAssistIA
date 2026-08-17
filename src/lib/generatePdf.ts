@@ -14,6 +14,23 @@ const COLOR_BODY: [number, number, number] = [51, 65, 85];    // slate-700
 const COLOR_MUTED: [number, number, number] = [100, 116, 139]; // slate-500
 const COLOR_LINE: [number, number, number] = [226, 232, 240]; // slate-200
 
+
+/**
+ * Formata YYYY-MM-DD como DD/MM/AAAA.
+ * Outros valores são preservados para permitir períodos textuais.
+ */
+function formatDateBR(value?: string): string {
+  if (!value) return "";
+
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+
+  if (!match) return value;
+
+  const [, year, month, day] = match;
+
+  return `${day}/${month}/${year}`;
+}
+
 /**
  * Gera e faz o download do planejamento pedagógico em PDF usando jsPDF.
  *
@@ -125,16 +142,29 @@ export async function generatePdf(result: PlanningResult): Promise<void> {
   doc.text(result.identificacao, MARGIN_X, y);
   y += 7;
 
-  // Metadados em linha
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.setTextColor(...COLOR_MUTED);
+  // Metadados de identificação
+doc.setFont("helvetica", "normal");
+doc.setFontSize(9);
+doc.setTextColor(...COLOR_MUTED);
+
+doc.text(
+  `Turma: ${result.turma}   |   Faixa etária: ${result.faixaEtaria}`,
+  MARGIN_X,
+  y
+);
+y += 5;
+
+if (result.dataPeriodo) {
   doc.text(
-    `Turma: ${result.turma}   |   Faixa etária: ${result.faixaEtaria}   |   Tema: ${result.tema}`,
+    `Data ou período: ${formatDateBR(result.dataPeriodo)}`,
     MARGIN_X,
     y
   );
   y += 5;
+}
+
+doc.text(`Tema: ${result.tema}`, MARGIN_X, y);
+y += 5;
 
   // Linha separadora
   doc.setDrawColor(...COLOR_LINE);

@@ -25,6 +25,7 @@ export class MockProvider implements PlanningProvider {
       // Dados espelhados da entrada
       turma: data.turma,
       faixaEtaria: data.faixaEtaria,
+      dataPeriodo: data.dataPeriodo,
       tema: data.tema,
       campoExperiencia: data.campoExperiencia,
       direitosAprendizagem: data.direitosAprendizagem,

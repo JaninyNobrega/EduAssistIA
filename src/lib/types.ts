@@ -29,6 +29,7 @@ export interface PlanningResult {
   identificacao: string;
   turma: string;
   faixaEtaria: string;
+  dataPeriodo?: string;
   tema: string;
   campoExperiencia: string;
   direitosAprendizagem: string[];
