@@ -198,7 +198,7 @@ function SelectField({
       value={value}
       onChange={onChange}
       aria-invalid={invalid}
-      className={`h-9 w-full rounded-xl border bg-white px-3 py-1 text-sm text-foreground shadow-sm transition-colors outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50 ${
+      className={`h-9 w-full rounded-xl border bg-white px-3 py-1 text-sm text-slate-700 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50 ${
         invalid
           ? "border-red-400 focus-visible:border-red-400 focus-visible:ring-red-400/20"
           : "border-input focus-visible:border-blue-500 focus-visible:ring-blue-500/20"
@@ -224,13 +224,13 @@ function SectionTitle({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
-      <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-blue-50 text-blue-600 shrink-0">
+    <div className="flex items-center gap-3 pb-3 border-b border-slate-100/80">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 text-blue-600 ring-1 ring-blue-100/80">
         {icon}
       </div>
       <h2
         id={id}
-        className="text-sm font-semibold text-slate-800 tracking-wide uppercase"
+        className="text-base font-semibold tracking-tight text-slate-800"
       >
         {children}
       </h2>
@@ -363,13 +363,13 @@ export default function PlanejamentoPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-blue-50/30">
       {/* Cabeçalho */}
-      <header className="sticky top-0 z-10 bg-white/90 backdrop-blur-sm border-b border-slate-100 shadow-sm">
+      <header className="sticky top-0 z-10 border-b border-slate-200/70 bg-white/85 backdrop-blur-xl">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 py-3.5 flex items-center gap-3">
           <Link
             href="/"
-            className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-blue-600 transition-colors"
+            className="flex items-center gap-1.5 text-sm font-medium text-slate-500 transition-colors hover:text-blue-600"
             aria-label="Voltar para a página inicial"
           >
             <svg
@@ -392,7 +392,7 @@ export default function PlanejamentoPage() {
             |
           </span>
           <div className="flex items-center gap-2">
-            <div className="w-5 h-5 rounded-md bg-blue-600 flex items-center justify-center">
+            <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 shadow-sm shadow-blue-600/20">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
@@ -408,7 +408,7 @@ export default function PlanejamentoPage() {
                 <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
               </svg>
             </div>
-            <span className="text-sm font-semibold text-slate-700">
+            <span className="text-sm font-semibold tracking-tight text-slate-800">
               EduAssist IA
             </span>
           </div>
@@ -419,10 +419,10 @@ export default function PlanejamentoPage() {
         {/* Título — só visível quando o formulário está aberto */}
         {showForm && (
           <div className="mb-8">
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+            <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-[1.75rem]">
               Novo Planejamento
             </h1>
-            <p className="mt-1.5 text-sm text-slate-500 leading-relaxed">
+            <p className="mt-1.5 text-sm leading-relaxed text-slate-500">
               Preencha os dados da proposta. Campos com{" "}
               <span
                 className="text-red-500 font-semibold"
@@ -437,7 +437,7 @@ export default function PlanejamentoPage() {
 
         {/* UX-R01: resumo compacto + botão "Editar informações" quando resultado visível */}
         {!showForm && result && (
-          <div className="flex items-center justify-between bg-white border border-slate-100 rounded-2xl px-5 py-3.5 shadow-sm mb-6">
+          <div className="mb-6 flex items-center justify-between rounded-2xl border border-blue-100/70 bg-white/90 px-5 py-3.5 shadow-[0_6px_24px_rgba(15,23,42,0.04)]">
             <div>
               <p className="text-sm font-medium text-slate-700">
                 {result.turma} · {result.faixaEtaria} · {result.tema}
@@ -481,7 +481,7 @@ export default function PlanejamentoPage() {
               {/* Seção 1 — Sobre a Turma */}
               <section
                 aria-labelledby="secao-turma"
-                className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 flex flex-col gap-5"
+                className="flex flex-col gap-5 rounded-2xl border border-slate-200/70 bg-white/95 p-6 shadow-[0_8px_30px_rgba(15,23,42,0.045)]"
               >
                 <SectionTitle
                   id="secao-turma"
@@ -606,7 +606,7 @@ export default function PlanejamentoPage() {
               {/* Seção 2 — Sobre a Atividade */}
               <section
                 aria-labelledby="secao-atividade"
-                className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 flex flex-col gap-5"
+                className="flex flex-col gap-5 rounded-2xl border border-slate-200/70 bg-white/95 p-6 shadow-[0_8px_30px_rgba(15,23,42,0.045)]"
               >
                 <SectionTitle
                   id="secao-atividade"
@@ -650,7 +650,7 @@ export default function PlanejamentoPage() {
                         key={tema}
                         type="button"
                         onClick={() => handleTemaSelect(tema)}
-                        className={`rounded-xl border px-3 py-1.5 text-sm font-medium transition-colors ${
+                        className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-all ${
                           !isOutroTema && form.tema === tema
                             ? "bg-blue-600 border-blue-600 text-white"
                             : "border-slate-200 bg-white text-slate-700 hover:bg-blue-50 hover:border-blue-300"
@@ -662,7 +662,7 @@ export default function PlanejamentoPage() {
                     <button
                       type="button"
                       onClick={() => handleTemaSelect("__outro__")}
-                      className={`rounded-xl border px-3 py-1.5 text-sm font-medium transition-colors ${
+                      className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-all ${
                         isOutroTema
                           ? "bg-blue-600 border-blue-600 text-white"
                           : "border-slate-200 bg-white text-slate-700 hover:bg-blue-50 hover:border-blue-300"
@@ -698,7 +698,7 @@ export default function PlanejamentoPage() {
                       <label
                         key={tipo}
                         htmlFor={`tipo-${tipo}`}
-                        className="flex items-center gap-2.5 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2.5 cursor-pointer hover:bg-blue-50 hover:border-blue-200 transition-colors has-[:checked]:bg-blue-50 has-[:checked]:border-blue-300"
+                        className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-slate-200/70 bg-slate-50/70 px-3 py-2.5 transition-all hover:border-blue-200 hover:bg-blue-50/70 has-[:checked]:border-blue-300 has-[:checked]:bg-blue-50"
                       >
                         <Checkbox
                           id={`tipo-${tipo}`}
@@ -734,7 +734,7 @@ export default function PlanejamentoPage() {
               {/* Seção 3 — Proposta Pedagógica */}
               <section
                 aria-labelledby="secao-proposta"
-                className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 flex flex-col gap-5"
+                className="flex flex-col gap-5 rounded-2xl border border-slate-200/70 bg-white/95 p-6 shadow-[0_8px_30px_rgba(15,23,42,0.045)]"
               >
                 <SectionTitle
                   id="secao-proposta"
@@ -792,7 +792,7 @@ export default function PlanejamentoPage() {
                       <label
                         key={direito}
                         htmlFor={`direito-${direito}`}
-                        className="flex items-center gap-2.5 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2.5 cursor-pointer hover:bg-blue-50 hover:border-blue-200 transition-colors has-[:checked]:bg-blue-50 has-[:checked]:border-blue-300"
+                        className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-slate-200/70 bg-slate-50/70 px-3 py-2.5 transition-all hover:border-blue-200 hover:bg-blue-50/70 has-[:checked]:border-blue-300 has-[:checked]:bg-blue-50"
                       >
                         <Checkbox
                           id={`direito-${direito}`}
@@ -845,7 +845,7 @@ export default function PlanejamentoPage() {
               {/* Seção 4 — Informações Adicionais */}
               <section
                 aria-labelledby="secao-adicionais"
-                className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 flex flex-col gap-5"
+                className="flex flex-col gap-5 rounded-2xl border border-slate-200/70 bg-white/95 p-6 shadow-[0_8px_30px_rgba(15,23,42,0.045)]"
               >
                 <SectionTitle
                   id="secao-adicionais"
@@ -892,7 +892,7 @@ export default function PlanejamentoPage() {
                             !materiaisSelecionados.includes(material),
                           )
                         }
-                        className={`rounded-xl border px-3 py-1.5 text-sm font-medium transition-colors ${
+                        className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-all ${
                           materiaisSelecionados.includes(material)
                             ? "bg-blue-600 border-blue-600 text-white"
                             : "border-slate-200 bg-white text-slate-700 hover:bg-blue-50 hover:border-blue-300"
@@ -903,7 +903,7 @@ export default function PlanejamentoPage() {
                     ))}
                   </div>
                   {/* Campo "Outros materiais" sempre visível como complemento */}
-                  <div className="mt-1 rounded-xl border border-dashed border-slate-200 bg-slate-50/60 p-3">
+                  <div className="mt-1 rounded-xl border border-dashed border-slate-200/90 bg-slate-50/70 p-3">
                     <div className="mb-2 flex items-center gap-2">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -960,7 +960,7 @@ export default function PlanejamentoPage() {
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full sm:w-auto px-8 py-2.5 h-auto text-base font-semibold rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-sm gap-2 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+                  className="h-auto w-full gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-8 py-2.5 text-base font-semibold text-white shadow-[0_10px_24px_rgba(37,99,235,0.20)] transition-all hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(37,99,235,0.24)] disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:translate-y-0 sm:w-auto"
                 >
                   {isLoading ? (
                     <>
