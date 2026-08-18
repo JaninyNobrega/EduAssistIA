@@ -1,19 +1,25 @@
 import type { PlanningResult } from "@/lib/types";
 
-// Margens e largura útil (A4: 210mm, margens de 20mm cada lado)
-const MARGIN_X = 20;
+// ─── Dimensões A4 ─────────────────────────────────────────────────────────────
+
+const MARGIN_X = 18;
 const PAGE_W = 210;
-const CONTENT_W = PAGE_W - MARGIN_X * 2;
 const PAGE_H = 297;
-const MARGIN_BOTTOM = 25; // reserva para o rodapé
+const CONTENT_W = PAGE_W - MARGIN_X * 2;
 
-// Paleta de cores em RGB
-const COLOR_BLUE: [number, number, number] = [37, 99, 235];   // blue-600
-const COLOR_DARK: [number, number, number] = [15, 23, 42];    // slate-900
-const COLOR_BODY: [number, number, number] = [51, 65, 85];    // slate-700
-const COLOR_MUTED: [number, number, number] = [100, 116, 139]; // slate-500
-const COLOR_LINE: [number, number, number] = [226, 232, 240]; // slate-200
+const TOP_CONTENT_Y = 34;
+const FOOTER_Y = 283;
+const CONTENT_LIMIT_Y = 273;
 
+// ─── Paleta ───────────────────────────────────────────────────────────────────
+
+const COLOR_BLUE: [number, number, number] = [37, 99, 235];
+const COLOR_BLUE_SOFT: [number, number, number] = [219, 234, 254];
+
+const COLOR_DARK: [number, number, number] = [15, 23, 42];
+const COLOR_BODY: [number, number, number] = [51, 65, 85];
+const COLOR_MUTED: [number, number, number] = [100, 116, 139];
+const COLOR_LINE: [number, number, number] = [226, 232, 240];
 
 /**
  * Formata YYYY-MM-DD como DD/MM/AAAA.
@@ -34,251 +40,396 @@ function formatDateBR(value?: string): string {
 /**
  * Gera e faz o download do planejamento pedagógico em PDF usando jsPDF.
  *
- * A geração é feita inteiramente no cliente, sem chamada a serviços externos.
- * Usa sempre o resultado atual (incluindo edições feitas na T12).
+ * A geração ocorre inteiramente no cliente e usa o estado atual
+ * do planejamento, incluindo edições realizadas pelo professor.
+ *
+ * UX-PDF01:
+ * - identificação compacta;
+ * - títulos mais leves;
+ * - menor espaçamento vertical;
+ * - melhor aproveitamento de página;
+ * - manutenção da identidade visual do EduAssist IA.
  *
  * Requisito: RF10
  */
-export async function generatePdf(result: PlanningResult): Promise<void> {
-  // Import dinâmico — evita que jsPDF seja incluído no bundle do servidor
+export async function generatePdf(
+  result: PlanningResult,
+): Promise<void> {
   const { jsPDF } = await import("jspdf");
 
-  const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
-  let y = 0; // posição vertical corrente
+  const doc = new jsPDF({
+    unit: "mm",
+    format: "a4",
+    orientation: "portrait",
+  });
 
-  // ─── Helpers ──────────────────────────────────────────────────────────────
+  let y = 0;
 
-  /** Verifica se há espaço; se não, adiciona nova página. */
+  // ─── Helpers ────────────────────────────────────────────────────────────────
+
+  function addPage() {
+    doc.addPage();
+    y = 18;
+  }
+
   function checkPageBreak(needed: number) {
-    if (y + needed > PAGE_H - MARGIN_BOTTOM) {
-      doc.addPage();
-      y = 20;
+    if (y + needed > CONTENT_LIMIT_Y) {
+      addPage();
     }
   }
 
-  /**
-   * Imprime texto com quebra de linha automática.
-   * Retorna o novo valor de y após o bloco.
-   */
   function addWrappedText(
     text: string,
     x: number,
-    startY: number,
     maxWidth: number,
-    lineHeight: number
-  ): number {
+    lineHeight = 4.7,
+  ) {
     const lines = doc.splitTextToSize(text, maxWidth) as string[];
-    lines.forEach((line: string) => {
+
+    lines.forEach((line) => {
       checkPageBreak(lineHeight);
       doc.text(line, x, y);
       y += lineHeight;
     });
-    return y;
   }
 
-  /** Imprime um título de seção com linha separadora. */
+  /**
+   * Título de seção leve:
+   * texto azul + pequena linha horizontal.
+   */
   function addSectionTitle(title: string) {
-    checkPageBreak(12);
-    doc.setFillColor(...COLOR_BLUE);
-    doc.rect(MARGIN_X, y - 4, CONTENT_W, 7, "F");
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(9);
-    doc.setTextColor(255, 255, 255);
-    doc.text(title.toUpperCase(), MARGIN_X + 3, y);
-    y += 7;
-    doc.setTextColor(...COLOR_BODY);
-  }
+    checkPageBreak(9);
 
-  /** Imprime um item de lista com bullet. */
-  function addListItem(text: string, indent = 0) {
-    checkPageBreak(6);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
-    doc.setTextColor(...COLOR_BODY);
-    const bullet = "•";
-    const bx = MARGIN_X + 3 + indent;
-    const tx = bx + 5;
-    doc.text(bullet, bx, y);
-    addWrappedText(text, tx, y, CONTENT_W - 8 - indent, 5.5);
-  }
+    y += 1;
 
-  /** Imprime um item numerado. */
-  function addNumberedItem(num: number, text: string) {
-    checkPageBreak(6);
-    const label = `${num}.`;
-    const tx = MARGIN_X + 10;
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(9);
+    doc.setFontSize(8.5);
     doc.setTextColor(...COLOR_BLUE);
-    doc.text(label, MARGIN_X + 3, y);
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(...COLOR_BODY);
-    addWrappedText(text, tx, y, CONTENT_W - 10, 5.5);
-  }
 
-  // ─── Cabeçalho ────────────────────────────────────────────────────────────
+    doc.text(title.toUpperCase(), MARGIN_X, y);
 
-  // Faixa azul de topo
-  doc.setFillColor(...COLOR_BLUE);
-  doc.rect(0, 0, PAGE_W, 28, "F");
+    const titleWidth = doc.getTextWidth(title.toUpperCase());
 
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(16);
-  doc.setTextColor(255, 255, 255);
-  doc.text("EduAssist IA", MARGIN_X, 13);
+    doc.setDrawColor(...COLOR_BLUE_SOFT);
+    doc.setLineWidth(0.35);
 
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(10);
-  doc.setTextColor(255, 255, 255);
-  doc.text("Planejamento Pedagógico", MARGIN_X, 21);
-
-  y = 36;
-
-  // ─── Identificação ────────────────────────────────────────────────────────
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(13);
-  doc.setTextColor(...COLOR_DARK);
-  doc.text(result.identificacao, MARGIN_X, y);
-  y += 7;
-
-  // Metadados de identificação
-doc.setFont("helvetica", "normal");
-doc.setFontSize(9);
-doc.setTextColor(...COLOR_MUTED);
-
-doc.text(
-  `Turma: ${result.turma}   |   Faixa etária: ${result.faixaEtaria}`,
-  MARGIN_X,
-  y
-);
-y += 5;
-
-if (result.dataPeriodo) {
-  doc.text(
-    `Data ou período: ${formatDateBR(result.dataPeriodo)}`,
-    MARGIN_X,
-    y
-  );
-  y += 5;
-}
-
-doc.text(`Tema: ${result.tema}`, MARGIN_X, y);
-y += 5;
-
-  // Linha separadora
-  doc.setDrawColor(...COLOR_LINE);
-  doc.setLineWidth(0.3);
-  doc.line(MARGIN_X, y, PAGE_W - MARGIN_X, y);
-  y += 6;
-
-  // ─── Campo de Experiência ─────────────────────────────────────────────────
-
-  addSectionTitle("Campo de Experiência");
-  y += 2;
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.setTextColor(...COLOR_BODY);
-  addWrappedText(result.campoExperiencia, MARGIN_X + 3, y, CONTENT_W - 6, 5.5);
-  y += 4;
-
-  // ─── Direitos de Aprendizagem ─────────────────────────────────────────────
-
-  addSectionTitle("Direitos de Aprendizagem");
-  y += 2;
-  result.direitosAprendizagem.forEach((d) => addListItem(d));
-  y += 4;
-
-  // ─── Objetivo de Aprendizagem ─────────────────────────────────────────────
-
-  addSectionTitle("Objetivo de Aprendizagem");
-  y += 2;
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.setTextColor(...COLOR_BODY);
-  addWrappedText(result.objetivoAprendizagem, MARGIN_X + 3, y, CONTENT_W - 6, 5.5);
-  y += 4;
-
-  // ─── Vivência de Aprendizagem ─────────────────────────────────────────────
-
-  addSectionTitle("Vivência de Aprendizagem");
-  y += 2;
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.setTextColor(...COLOR_BODY);
-  addWrappedText(result.vivenciaAprendizagem, MARGIN_X + 3, y, CONTENT_W - 6, 5.5);
-  y += 4;
-
-  // ─── Metodologia ─────────────────────────────────────────────────────────
-
-  addSectionTitle("Metodologia");
-  y += 2;
-  result.metodologia.forEach((etapa, i) => addNumberedItem(i + 1, etapa));
-  y += 4;
-
-  // ─── Materiais Necessários ───────────────────────────────────────────────
-
-  addSectionTitle("Materiais Necessários");
-  y += 2;
-  result.materiaisNecessarios.forEach((m) => addListItem(m));
-  y += 4;
-
-  // ─── Avaliação por Observação ─────────────────────────────────────────────
-
-  addSectionTitle("Avaliação por Observação");
-  y += 2;
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.setTextColor(...COLOR_BODY);
-  addWrappedText(result.avaliacaoObservacao, MARGIN_X + 3, y, CONTENT_W - 6, 5.5);
-  y += 4;
-
-  // ─── Adaptações Possíveis ─────────────────────────────────────────────────
-
-  addSectionTitle("Adaptações Possíveis");
-  y += 2;
-  result.adaptacoesPossiveis.forEach((a) => addListItem(a));
-  y += 4;
-
-  // ─── Observação Final ─────────────────────────────────────────────────────
-
-  addSectionTitle("Observação Final");
-  y += 2;
-  doc.setFont("helvetica", "italic");
-  doc.setFontSize(9);
-  doc.setTextColor(...COLOR_MUTED);
-  addWrappedText(result.observacaoFinal, MARGIN_X + 3, y, CONTENT_W - 6, 5.5);
-
-  // ─── Rodapé em todas as páginas ───────────────────────────────────────────
-
-  const totalPages: number = (doc as unknown as { internal: { getNumberOfPages(): number } })
-    .internal.getNumberOfPages();
-
-  for (let i = 1; i <= totalPages; i++) {
-    doc.setPage(i);
-
-    // Linha acima do rodapé
-    doc.setDrawColor(...COLOR_LINE);
-    doc.setLineWidth(0.3);
-    doc.line(MARGIN_X, PAGE_H - 18, PAGE_W - MARGIN_X, PAGE_H - 18);
-
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(7.5);
-    doc.setTextColor(...COLOR_MUTED);
-    doc.text("Documento gerado pelo EduAssist IA.", MARGIN_X, PAGE_H - 13);
-    doc.text(
-      "Este planejamento constitui uma sugestão de apoio ao professor e poderá ser adaptado conforme a realidade da turma.",
-      MARGIN_X,
-      PAGE_H - 9,
-      { maxWidth: CONTENT_W - 20 }
+    doc.line(
+      MARGIN_X + titleWidth + 4,
+      y - 0.8,
+      PAGE_W - MARGIN_X,
+      y - 0.8,
     );
 
-    // Numeração de página
-    doc.text(`${i} / ${totalPages}`, PAGE_W - MARGIN_X, PAGE_H - 9, { align: "right" });
+    y += 4.8;
+
+    doc.setTextColor(...COLOR_BODY);
   }
 
-  // ─── Download ────────────────────────────────────────────────────────────
+  function addListItem(text: string) {
+    checkPageBreak(5);
 
-  const filename = `EduAssistIA_${result.turma.replace(/\s+/g, "_")}_${result.tema.replace(/\s+/g, "_")}.pdf`;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8.8);
+    doc.setTextColor(...COLOR_BODY);
+
+    const bulletX = MARGIN_X + 1;
+    const textX = MARGIN_X + 5;
+
+    doc.setTextColor(...COLOR_BLUE);
+    doc.text("•", bulletX, y);
+
+    doc.setTextColor(...COLOR_BODY);
+
+    addWrappedText(
+      text,
+      textX,
+      CONTENT_W - 5,
+      4.6,
+    );
+  }
+
+  function addNumberedItem(num: number, text: string) {
+    checkPageBreak(5);
+
+    const numberX = MARGIN_X + 1;
+    const textX = MARGIN_X + 7;
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8.8);
+    doc.setTextColor(...COLOR_BLUE);
+    doc.text(`${num}.`, numberX, y);
+
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(...COLOR_BODY);
+
+    addWrappedText(
+      text,
+      textX,
+      CONTENT_W - 7,
+      4.6,
+    );
+  }
+
+  function addParagraph(text: string) {
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8.8);
+    doc.setTextColor(...COLOR_BODY);
+
+    addWrappedText(
+      text,
+      MARGIN_X,
+      CONTENT_W,
+      4.7,
+    );
+  }
+
+  // ─── Cabeçalho ─────────────────────────────────────────────────────────────
+
+  doc.setFillColor(...COLOR_BLUE);
+  doc.rect(0, 0, PAGE_W, 25, "F");
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(15);
+  doc.setTextColor(255, 255, 255);
+  doc.text("EduAssist IA", MARGIN_X, 11.5);
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.text("Planejamento Pedagógico", MARGIN_X, 18.5);
+
+  y = TOP_CONTENT_Y;
+
+  // ─── Identificação ─────────────────────────────────────────────────────────
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(12);
+  doc.setTextColor(...COLOR_DARK);
+
+  const titleLines = doc.splitTextToSize(
+    result.identificacao,
+    CONTENT_W,
+  ) as string[];
+
+  titleLines.forEach((line) => {
+    doc.text(line, MARGIN_X, y);
+    y += 5.5;
+  });
+
+  y += 1.5;
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8.6);
+  doc.setTextColor(...COLOR_MUTED);
+
+  const columnGap = 6;
+  const columnWidth = (CONTENT_W - columnGap) / 2;
+  const rightColumnX = MARGIN_X + columnWidth + columnGap;
+
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...COLOR_DARK);
+  doc.text("Turma", MARGIN_X, y);
+  doc.text("Faixa etária", rightColumnX, y);
+
+  y += 4;
+
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(...COLOR_BODY);
+
+  doc.text(
+    result.turma,
+    MARGIN_X,
+    y,
+    { maxWidth: columnWidth },
+  );
+
+  doc.text(
+    result.faixaEtaria,
+    rightColumnX,
+    y,
+    { maxWidth: columnWidth },
+  );
+
+  y += 6;
+
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...COLOR_DARK);
+
+  if (result.dataPeriodo) {
+    doc.text("Data", MARGIN_X, y);
+  }
+
+  doc.text("Tema", rightColumnX, y);
+
+  y += 4;
+
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(...COLOR_BODY);
+
+  if (result.dataPeriodo) {
+    doc.text(
+      formatDateBR(result.dataPeriodo),
+      MARGIN_X,
+      y,
+      { maxWidth: columnWidth },
+    );
+  }
+
+  doc.text(
+    result.tema,
+    rightColumnX,
+    y,
+    { maxWidth: columnWidth },
+  );
+
+  y += 6;
+
+  doc.setDrawColor(...COLOR_LINE);
+  doc.setLineWidth(0.35);
+  doc.line(
+    MARGIN_X,
+    y,
+    PAGE_W - MARGIN_X,
+    y,
+  );
+
+  y += 5;
+
+  // ─── Campo de Experiência ──────────────────────────────────────────────────
+
+  addSectionTitle("Campo de Experiência");
+  addParagraph(result.campoExperiencia);
+  y += 2.5;
+
+  // ─── Direitos de Aprendizagem ──────────────────────────────────────────────
+
+  addSectionTitle("Direitos de Aprendizagem");
+
+  result.direitosAprendizagem.forEach((item) => {
+    addListItem(item);
+  });
+
+  y += 2.5;
+
+  // ─── Objetivo de Aprendizagem ──────────────────────────────────────────────
+
+  addSectionTitle("Objetivo de Aprendizagem");
+  addParagraph(result.objetivoAprendizagem);
+  y += 2.5;
+
+  // ─── Vivência de Aprendizagem ──────────────────────────────────────────────
+
+  addSectionTitle("Vivência de Aprendizagem");
+  addParagraph(result.vivenciaAprendizagem);
+  y += 2.5;
+
+  // ─── Metodologia ───────────────────────────────────────────────────────────
+
+  addSectionTitle("Metodologia");
+
+  result.metodologia.forEach((etapa, index) => {
+    addNumberedItem(index + 1, etapa);
+  });
+
+  y += 2.5;
+
+  // ─── Materiais Necessários ─────────────────────────────────────────────────
+
+  addSectionTitle("Materiais Necessários");
+
+  result.materiaisNecessarios.forEach((material) => {
+    addListItem(material);
+  });
+
+  y += 2.5;
+
+  // ─── Avaliação por Observação ──────────────────────────────────────────────
+
+  addSectionTitle("Avaliação por Observação");
+  addParagraph(result.avaliacaoObservacao);
+  y += 2.5;
+
+  // ─── Adaptações Possíveis ──────────────────────────────────────────────────
+
+  addSectionTitle("Adaptações Possíveis");
+
+  result.adaptacoesPossiveis.forEach((adaptacao) => {
+    addListItem(adaptacao);
+  });
+
+  y += 2.5;
+
+  // ─── Observação Final ──────────────────────────────────────────────────────
+
+  addSectionTitle("Observação Final");
+
+  doc.setFont("helvetica", "italic");
+  doc.setFontSize(8.6);
+  doc.setTextColor(...COLOR_MUTED);
+
+  addWrappedText(
+    result.observacaoFinal,
+    MARGIN_X,
+    CONTENT_W,
+    4.7,
+  );
+
+  // ─── Rodapé ────────────────────────────────────────────────────────────────
+
+  const totalPages = (
+    doc as unknown as {
+      internal: {
+        getNumberOfPages(): number;
+      };
+    }
+  ).internal.getNumberOfPages();
+
+  for (let page = 1; page <= totalPages; page++) {
+    doc.setPage(page);
+
+    doc.setDrawColor(...COLOR_LINE);
+    doc.setLineWidth(0.3);
+
+    doc.line(
+      MARGIN_X,
+      FOOTER_Y - 7,
+      PAGE_W - MARGIN_X,
+      FOOTER_Y - 7,
+    );
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7);
+    doc.setTextColor(...COLOR_MUTED);
+
+    doc.text(
+      "Documento gerado pelo EduAssist IA.",
+      MARGIN_X,
+      FOOTER_Y - 2,
+    );
+
+    doc.text(
+      "Sugestão de apoio ao planejamento. O conteúdo poderá ser revisado e adaptado pelo professor.",
+      MARGIN_X,
+      FOOTER_Y + 2,
+      {
+        maxWidth: CONTENT_W - 18,
+      },
+    );
+
+    doc.text(
+      `${page} / ${totalPages}`,
+      PAGE_W - MARGIN_X,
+      FOOTER_Y + 2,
+      {
+        align: "right",
+      },
+    );
+  }
+
+  // ─── Download ───────────────────────────────────────────────────────────────
+
+  const filename =
+    `EduAssistIA_${result.turma.replace(/\s+/g, "_")}_` +
+    `${result.tema.replace(/\s+/g, "_")}.pdf`;
+
   doc.save(filename);
 }
