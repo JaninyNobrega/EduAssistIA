@@ -134,14 +134,14 @@ function DocSection({
     <div className="py-4">
       {/* Título da seção + botão Editar */}
       <div className="flex items-center justify-between mb-2">
-        <h3 className="text-xs font-semibold text-blue-600 uppercase tracking-widest">
+        <h3 className="text-xs font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">
           {title}
         </h3>
         {!isEditing && (
           <button
             type="button"
             onClick={handleEditClick}
-            className="text-xs text-slate-400 hover:text-blue-600 transition-colors flex items-center gap-1"
+            className="flex items-center gap-1 text-xs text-slate-400 transition-colors hover:text-blue-600 dark:text-slate-500 dark:hover:text-blue-400"
             aria-label={`Editar ${title}`}
           >
             <svg
@@ -171,7 +171,7 @@ function DocSection({
             onChange={(e) => setDraft(e.target.value)}
             rows={5}
             autoFocus
-            className="w-full rounded-xl border border-input bg-white px-3 py-2 text-sm text-slate-700 outline-none resize-none focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500/20 leading-relaxed shadow-sm"
+            className="w-full resize-none rounded-xl border border-input bg-white px-3 py-2 text-sm leading-relaxed text-slate-700 shadow-sm outline-none focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500/20 dark:bg-slate-800 dark:text-slate-200"
             aria-label={`Editar ${title}`}
           />
           {currentValue.includes("\n") && (
@@ -203,7 +203,7 @@ function DocSection({
             <button
               type="button"
               onClick={onCancel}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-sm font-medium px-4 py-1.5 transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -228,7 +228,7 @@ function DocSection({
       )}
 
       {/* Separador discreto */}
-      <div className="mt-4 border-b border-slate-100" aria-hidden="true" />
+      <div className="mt-4 border-b border-slate-100 dark:border-slate-800" aria-hidden="true" />
     </div>
   );
 }
@@ -336,15 +336,15 @@ export function PlanningResult({
   return (
     <section aria-label="Planejamento gerado" className="mt-2 mb-10">
       {/* Documento único */}
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+      <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
         {/* Topo do documento: identificação + ações */}
-        <div className="px-6 pt-6 pb-4 border-b border-slate-100">
+        <div className="border-b border-slate-100 px-6 pb-4 pt-6 dark:border-slate-800">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">
               <p className="text-xs text-blue-600 font-semibold uppercase tracking-widest mb-1">
                 Planejamento Pedagógico
               </p>
-              <h2 className="text-base font-bold text-slate-900 leading-snug">
+              <h2 className="text-base font-bold leading-snug text-slate-900 dark:text-slate-50">
                 {result.identificacao}
               </h2>
               <div className="flex flex-wrap gap-1.5 mt-2">
@@ -358,7 +358,7 @@ export function PlanningResult({
                   .map((tag) => (
                     <span
                       key={tag}
-                      className="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600"
+                      className="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300"
                     >
                       {tag}
                     </span>
@@ -371,7 +371,7 @@ export function PlanningResult({
                       type="date"
                       value={dateDraft}
                       onChange={(e) => setDateDraft(e.target.value)}
-                      className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                      className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:[color-scheme:dark]"
                       aria-label="Editar data do planejamento"
                     />
 
@@ -389,7 +389,7 @@ export function PlanningResult({
                         setDateDraft(result.dataPeriodo ?? "");
                         setEditingSection(null);
                       }}
-                      className="text-xs text-slate-500 hover:text-slate-700"
+                      className="text-xs text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
                     >
                       Cancelar
                     </button>
@@ -398,7 +398,7 @@ export function PlanningResult({
                   <button
                     type="button"
                     onClick={handleEditDate}
-                    className="text-xs text-slate-400 hover:text-blue-600 transition-colors"
+                    className="text-xs text-slate-400 transition-colors hover:text-blue-600 dark:text-slate-500 dark:hover:text-blue-400"
                   >
                     {result.dataPeriodo ? "Editar data" : "Adicionar data"}
                   </button>
@@ -412,7 +412,7 @@ export function PlanningResult({
                 type="button"
                 onClick={handleCopy}
                 aria-live="polite"
-                className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 shadow-sm transition-all hover:border-blue-200 hover:bg-blue-50/60 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/20"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 shadow-sm transition-all hover:border-blue-200 hover:bg-blue-50/60 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-800 dark:hover:bg-blue-950/40 dark:hover:text-blue-300"
               >
                 {copyState === "copied" ? (
                   <>
@@ -458,7 +458,7 @@ export function PlanningResult({
                 onClick={handleExportPdf}
                 disabled={pdfState === "generating"}
                 aria-live="polite"
-                className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition-all hover:bg-blue-700 hover:shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {pdfState === "generating" ? (
                   <>
@@ -511,7 +511,7 @@ export function PlanningResult({
             title="Campo de Experiência"
             {...ec("campoExperiencia", result.campoExperiencia)}
           >
-            <p className="text-sm text-slate-700 leading-relaxed">
+            <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
               {result.campoExperiencia}
             </p>
           </DocSection>
@@ -536,7 +536,7 @@ export function PlanningResult({
             title="Objetivo de Aprendizagem"
             {...ec("objetivoAprendizagem", result.objetivoAprendizagem)}
           >
-            <p className="text-sm text-slate-700 leading-relaxed">
+            <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
               {result.objetivoAprendizagem}
             </p>
           </DocSection>
@@ -545,7 +545,7 @@ export function PlanningResult({
             title="Vivência de Aprendizagem"
             {...ec("vivenciaAprendizagem", result.vivenciaAprendizagem)}
           >
-            <p className="text-sm text-slate-700 leading-relaxed">
+            <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
               {result.vivenciaAprendizagem}
             </p>
           </DocSection>
@@ -560,7 +560,7 @@ export function PlanningResult({
                   <span className="flex items-center justify-center w-4 h-4 rounded-full bg-blue-100 text-blue-700 text-[10px] font-bold shrink-0 mt-0.5">
                     {i + 1}
                   </span>
-                  <span className="text-sm text-slate-700 leading-relaxed">
+                  <span className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
                     {etapa}
                   </span>
                 </li>
@@ -592,7 +592,7 @@ export function PlanningResult({
             title="Avaliação por Observação"
             {...ec("avaliacaoObservacao", result.avaliacaoObservacao)}
           >
-            <p className="text-sm text-slate-700 leading-relaxed">
+            <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
               {result.avaliacaoObservacao}
             </p>
           </DocSection>
@@ -620,7 +620,7 @@ export function PlanningResult({
           {/* Última seção — sem separador no final */}
           <div className="py-4">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-xs font-semibold text-blue-600 uppercase tracking-widest">
+              <h3 className="text-xs font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">
                 Observação Final
               </h3>
               {editingSection !== "observacaoFinal" && (
@@ -629,7 +629,7 @@ export function PlanningResult({
                   onClick={() => {
                     setEditingSection("observacaoFinal");
                   }}
-                  className="text-xs text-slate-400 hover:text-blue-600 transition-colors flex items-center gap-1"
+                  className="flex items-center gap-1 text-xs text-slate-400 transition-colors hover:text-blue-600 dark:text-slate-500 dark:hover:text-blue-400"
                   aria-label="Editar Observação Final"
                 >
                   <svg
@@ -657,7 +657,7 @@ export function PlanningResult({
                 onCancel={handleCancel}
               />
             ) : (
-              <p className="text-sm text-slate-500 leading-relaxed italic">
+              <p className="text-sm italic leading-relaxed text-slate-500 dark:text-slate-400">
                 {result.observacaoFinal}
               </p>
             )}
@@ -686,7 +686,7 @@ function ObsFinalEditor({
         onChange={(e) => setDraft(e.target.value)}
         rows={4}
         autoFocus
-        className="w-full rounded-xl border border-input bg-white px-3 py-2 text-sm text-slate-700 outline-none resize-none focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500/20 leading-relaxed shadow-sm"
+        className="w-full resize-none rounded-xl border border-input bg-white px-3 py-2 text-sm leading-relaxed text-slate-700 shadow-sm outline-none focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500/20 dark:bg-slate-800 dark:text-slate-200"
       />
       <div className="flex gap-2">
         <button
@@ -712,7 +712,7 @@ function ObsFinalEditor({
         <button
           type="button"
           onClick={onCancel}
-          className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-sm font-medium px-4 py-1.5 transition-colors"
+          className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"

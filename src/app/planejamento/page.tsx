@@ -198,7 +198,7 @@ function SelectField({
       value={value}
       onChange={onChange}
       aria-invalid={invalid}
-      className={`h-9 w-full rounded-xl border bg-white px-3 py-1 text-sm text-slate-700 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50 ${
+      className={`h-9 w-full rounded-xl border bg-white px-3 py-1 text-sm text-slate-700 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-slate-900 dark:text-slate-200 ${
         invalid
           ? "border-red-400 focus-visible:border-red-400 focus-visible:ring-red-400/20"
           : "border-input focus-visible:border-blue-500 focus-visible:ring-blue-500/20"
@@ -224,13 +224,13 @@ function SectionTitle({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center gap-3 pb-3 border-b border-slate-100/80">
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 text-blue-600 ring-1 ring-blue-100/80">
+    <div className="flex items-center gap-3 border-b border-slate-100/80 pb-3 dark:border-slate-800">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 text-blue-600 ring-1 ring-blue-100/80 dark:from-blue-950/70 dark:to-indigo-950/70 dark:text-blue-400 dark:ring-blue-900/70">
         {icon}
       </div>
       <h2
         id={id}
-        className="text-base font-semibold tracking-tight text-slate-800"
+        className="text-base font-semibold tracking-tight text-slate-800 dark:text-slate-100"
       >
         {children}
       </h2>
@@ -363,13 +363,13 @@ export default function PlanejamentoPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-blue-50/30">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-blue-50/30 transition-colors dark:from-slate-950 dark:via-slate-950 dark:to-slate-900">
       {/* Cabeçalho */}
-      <header className="sticky top-0 z-10 border-b border-slate-200/70 bg-white/85 backdrop-blur-xl">
+      <header className="sticky top-0 z-10 border-b border-slate-200/70 bg-white/85 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/85">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 py-3.5 flex items-center gap-3">
           <Link
             href="/"
-            className="flex items-center gap-1.5 text-sm font-medium text-slate-500 transition-colors hover:text-blue-600"
+            className="flex items-center gap-1.5 text-sm font-medium text-slate-500 transition-colors hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400"
             aria-label="Voltar para a página inicial"
           >
             <svg
@@ -388,7 +388,7 @@ export default function PlanejamentoPage() {
             </svg>
             Voltar
           </Link>
-          <span className="text-slate-200" aria-hidden="true">
+          <span className="text-slate-200 dark:text-slate-700" aria-hidden="true">
             |
           </span>
           <div className="flex items-center gap-2">
@@ -408,7 +408,7 @@ export default function PlanejamentoPage() {
                 <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
               </svg>
             </div>
-            <span className="text-sm font-semibold tracking-tight text-slate-800">
+            <span className="text-sm font-semibold tracking-tight text-slate-800 dark:text-slate-200">
               EduAssist IA
             </span>
           </div>
@@ -419,10 +419,10 @@ export default function PlanejamentoPage() {
         {/* Título — só visível quando o formulário está aberto */}
         {showForm && (
           <div className="mb-8">
-            <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-[1.75rem]">
+            <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-50 sm:text-[1.75rem]">
               Novo Planejamento
             </h1>
-            <p className="mt-1.5 text-sm leading-relaxed text-slate-500">
+            <p className="mt-1.5 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
               Preencha os dados da proposta. Campos com{" "}
               <span
                 className="text-red-500 font-semibold"
@@ -437,12 +437,12 @@ export default function PlanejamentoPage() {
 
         {/* UX-R01: resumo compacto + botão "Editar informações" quando resultado visível */}
         {!showForm && result && (
-          <div className="mb-6 flex items-center justify-between rounded-2xl border border-blue-100/70 bg-white/90 px-5 py-3.5 shadow-[0_6px_24px_rgba(15,23,42,0.04)]">
+          <div className="mb-6 flex items-center justify-between rounded-2xl border border-blue-100/70 bg-white/90 px-5 py-3.5 shadow-[0_6px_24px_rgba(15,23,42,0.04)] dark:border-slate-800 dark:bg-slate-900/90">
             <div>
-              <p className="text-sm font-medium text-slate-700">
+              <p className="text-sm font-medium text-slate-700 dark:text-slate-200">
                 {result.turma} · {result.faixaEtaria} · {result.tema}
               </p>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-xs text-slate-400 mt-0.5 dark:text-slate-500">
                 Dados do planejamento
               </p>
             </div>
@@ -481,7 +481,7 @@ export default function PlanejamentoPage() {
               {/* Seção 1 — Sobre a Turma */}
               <section
                 aria-labelledby="secao-turma"
-                className="flex flex-col gap-5 rounded-2xl border border-slate-200/70 bg-white/95 p-6 shadow-[0_8px_30px_rgba(15,23,42,0.045)]"
+                className="flex flex-col gap-5 rounded-2xl border border-slate-200/70 bg-white/95 p-6 shadow-[0_8px_30px_rgba(15,23,42,0.045)] dark:border-slate-800 dark:bg-slate-900/95"
               >
                 <SectionTitle
                   id="secao-turma"
@@ -533,16 +533,16 @@ export default function PlanejamentoPage() {
                     <div
                       id="faixaEtaria"
                       aria-label="Faixa etária inferida automaticamente"
-                      className="h-9 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-1 text-sm text-slate-600 flex items-center"
+                      className="flex h-9 w-full items-center rounded-xl border border-slate-200 bg-slate-50 px-3 py-1 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-300"
                     >
                       {form.faixaEtaria || (
-                        <span className="text-slate-400 italic">
+                        <span className="italic text-slate-400 dark:text-slate-500">
                           Definida conforme a turma
                         </span>
                       )}
                     </div>
                     {form.faixaEtaria && (
-                      <p className="text-xs text-slate-400">
+                      <p className="text-xs text-slate-400 dark:text-slate-500">
                         Definida automaticamente conforme a turma.
                       </p>
                     )}
@@ -561,7 +561,7 @@ export default function PlanejamentoPage() {
                   <div className="flex flex-col gap-1.5">
                     <Label htmlFor="dataPeriodo">Data</Label>
 
-                    <div className="group flex h-9 w-full items-center gap-2 rounded-xl border border-input bg-white px-3 shadow-sm transition-colors focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20">
+                    <div className="group flex h-9 w-full items-center gap-2 rounded-xl border border-input bg-white px-3 shadow-sm transition-colors focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 dark:bg-slate-900">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         viewBox="0 0 24 24"
@@ -592,11 +592,11 @@ export default function PlanejamentoPage() {
                         name="dataPeriodo"
                         value={form.dataPeriodo}
                         onChange={handleChange}
-                        className="block min-w-0 flex-1 border-0 bg-transparent p-0 text-sm text-foreground outline-none"
+                        className="block min-w-0 flex-1 border-0 bg-transparent p-0 text-sm text-foreground outline-none dark:[color-scheme:dark]"
                       />
                     </div>
 
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-slate-400 dark:text-slate-500">
                       Opcional. Selecione a data prevista para a atividade.
                     </p>
                   </div>
@@ -606,7 +606,7 @@ export default function PlanejamentoPage() {
               {/* Seção 2 — Sobre a Atividade */}
               <section
                 aria-labelledby="secao-atividade"
-                className="flex flex-col gap-5 rounded-2xl border border-slate-200/70 bg-white/95 p-6 shadow-[0_8px_30px_rgba(15,23,42,0.045)]"
+                className="flex flex-col gap-5 rounded-2xl border border-slate-200/70 bg-white/95 p-6 shadow-[0_8px_30px_rgba(15,23,42,0.045)] dark:border-slate-800 dark:bg-slate-900/95"
               >
                 <SectionTitle
                   id="secao-atividade"
@@ -636,7 +636,7 @@ export default function PlanejamentoPage() {
                     </span>
                   </Label>
 
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-slate-400 dark:text-slate-500">
                     Escolha uma sugestão ou informe um tema personalizado.
                   </p>
                   {/* UX-R04: sugestões de tema para Educação Infantil */}
@@ -653,7 +653,7 @@ export default function PlanejamentoPage() {
                         className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-all ${
                           !isOutroTema && form.tema === tema
                             ? "bg-blue-600 border-blue-600 text-white"
-                            : "border-slate-200 bg-white text-slate-700 hover:bg-blue-50 hover:border-blue-300"
+                            : "border-slate-200 bg-white text-slate-700 hover:bg-blue-50 hover:border-blue-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-800 dark:hover:bg-blue-950/40"
                         }`}
                       >
                         {tema}
@@ -665,7 +665,7 @@ export default function PlanejamentoPage() {
                       className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-all ${
                         isOutroTema
                           ? "bg-blue-600 border-blue-600 text-white"
-                          : "border-slate-200 bg-white text-slate-700 hover:bg-blue-50 hover:border-blue-300"
+                          : "border-slate-200 bg-white text-slate-700 hover:bg-blue-50 hover:border-blue-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-800 dark:hover:bg-blue-950/40"
                       }`}
                     >
                       Outro tema
@@ -679,7 +679,7 @@ export default function PlanejamentoPage() {
                       value={temaCustom}
                       onChange={handleTemaCustom}
                       placeholder="Descreva o tema..."
-                      className={`h-9 rounded-xl shadow-sm mt-1${submitted && errors.tema ? " border-red-400" : ""}`}
+                      className={`mt-1 h-9 rounded-xl shadow-sm dark:bg-slate-900 dark:text-slate-200${submitted && errors.tema ? " border-red-400" : ""}`}
                       autoComplete="off"
                       aria-label="Descreva o tema"
                     />
@@ -698,7 +698,7 @@ export default function PlanejamentoPage() {
                       <label
                         key={tipo}
                         htmlFor={`tipo-${tipo}`}
-                        className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-slate-200/70 bg-slate-50/70 px-3 py-2.5 transition-all hover:border-blue-200 hover:bg-blue-50/70 has-[:checked]:border-blue-300 has-[:checked]:bg-blue-50"
+                        className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-slate-200/70 bg-slate-50/70 px-3 py-2.5 transition-all hover:border-blue-200 hover:bg-blue-50/70 has-[:checked]:border-blue-300 has-[:checked]:bg-blue-50 dark:border-slate-700 dark:bg-slate-800/60 dark:hover:border-blue-800 dark:hover:bg-blue-950/40 dark:has-[:checked]:border-blue-700 dark:has-[:checked]:bg-blue-950/50"
                       >
                         <Checkbox
                           id={`tipo-${tipo}`}
@@ -711,7 +711,7 @@ export default function PlanejamentoPage() {
                             )
                           }
                         />
-                        <span className="text-sm text-slate-700 select-none">
+                        <span className="select-none text-sm text-slate-700 dark:text-slate-300">
                           {tipo}
                         </span>
                       </label>
@@ -734,7 +734,7 @@ export default function PlanejamentoPage() {
               {/* Seção 3 — Proposta Pedagógica */}
               <section
                 aria-labelledby="secao-proposta"
-                className="flex flex-col gap-5 rounded-2xl border border-slate-200/70 bg-white/95 p-6 shadow-[0_8px_30px_rgba(15,23,42,0.045)]"
+                className="flex flex-col gap-5 rounded-2xl border border-slate-200/70 bg-white/95 p-6 shadow-[0_8px_30px_rgba(15,23,42,0.045)] dark:border-slate-800 dark:bg-slate-900/95"
               >
                 <SectionTitle
                   id="secao-proposta"
@@ -792,7 +792,7 @@ export default function PlanejamentoPage() {
                       <label
                         key={direito}
                         htmlFor={`direito-${direito}`}
-                        className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-slate-200/70 bg-slate-50/70 px-3 py-2.5 transition-all hover:border-blue-200 hover:bg-blue-50/70 has-[:checked]:border-blue-300 has-[:checked]:bg-blue-50"
+                        className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-slate-200/70 bg-slate-50/70 px-3 py-2.5 transition-all hover:border-blue-200 hover:bg-blue-50/70 has-[:checked]:border-blue-300 has-[:checked]:bg-blue-50 dark:border-slate-700 dark:bg-slate-800/60 dark:hover:border-blue-800 dark:hover:bg-blue-950/40 dark:has-[:checked]:border-blue-700 dark:has-[:checked]:bg-blue-950/50"
                       >
                         <Checkbox
                           id={`direito-${direito}`}
@@ -805,7 +805,7 @@ export default function PlanejamentoPage() {
                             )
                           }
                         />
-                        <span className="text-sm text-slate-700 select-none">
+                        <span className="select-none text-sm text-slate-700 dark:text-slate-300">
                           {direito}
                         </span>
                       </label>
@@ -831,7 +831,7 @@ export default function PlanejamentoPage() {
                     onChange={handleChange}
                     placeholder="Ex: Desenvolver oralidade, coordenação motora, percepção de cores..."
                     rows={3}
-                    className={`rounded-xl shadow-sm resize-none${submitted && errors.objetivoAprendizagem ? " border-red-400 focus-visible:border-red-400 focus-visible:ring-red-400/20" : ""}`}
+                    className={`resize-none rounded-xl shadow-sm dark:bg-slate-900 dark:text-slate-200${submitted && errors.objetivoAprendizagem ? " border-red-400 focus-visible:border-red-400 focus-visible:ring-red-400/20" : ""}`}
                     aria-invalid={submitted && !!errors.objetivoAprendizagem}
                   />
                   <FieldError
@@ -845,7 +845,7 @@ export default function PlanejamentoPage() {
               {/* Seção 4 — Informações Adicionais */}
               <section
                 aria-labelledby="secao-adicionais"
-                className="flex flex-col gap-5 rounded-2xl border border-slate-200/70 bg-white/95 p-6 shadow-[0_8px_30px_rgba(15,23,42,0.045)]"
+                className="flex flex-col gap-5 rounded-2xl border border-slate-200/70 bg-white/95 p-6 shadow-[0_8px_30px_rgba(15,23,42,0.045)] dark:border-slate-800 dark:bg-slate-900/95"
               >
                 <SectionTitle
                   id="secao-adicionais"
@@ -872,7 +872,7 @@ export default function PlanejamentoPage() {
                 <div className="flex flex-col gap-2">
                   <Label>Materiais Disponíveis</Label>
 
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-slate-400 dark:text-slate-500">
                     Selecione os materiais que estarão disponíveis para a
                     atividade.
                   </p>
@@ -895,7 +895,7 @@ export default function PlanejamentoPage() {
                         className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-all ${
                           materiaisSelecionados.includes(material)
                             ? "bg-blue-600 border-blue-600 text-white"
-                            : "border-slate-200 bg-white text-slate-700 hover:bg-blue-50 hover:border-blue-300"
+                            : "border-slate-200 bg-white text-slate-700 hover:bg-blue-50 hover:border-blue-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-800 dark:hover:bg-blue-950/40"
                         }`}
                       >
                         {material}
@@ -903,7 +903,7 @@ export default function PlanejamentoPage() {
                     ))}
                   </div>
                   {/* Campo "Outros materiais" sempre visível como complemento */}
-                  <div className="mt-1 rounded-xl border border-dashed border-slate-200/90 bg-slate-50/70 p-3">
+                  <div className="mt-1 rounded-xl border border-dashed border-slate-200/90 bg-slate-50/70 p-3 dark:border-slate-700 dark:bg-slate-800/50">
                     <div className="mb-2 flex items-center gap-2">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -920,7 +920,7 @@ export default function PlanejamentoPage() {
                         <line x1="5" y1="12" x2="19" y2="12" />
                       </svg>
 
-                      <span className="text-xs font-medium text-slate-500">
+                      <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
                         Outro material
                       </span>
                     </div>
@@ -930,7 +930,7 @@ export default function PlanejamentoPage() {
                       value={materiaisOutro}
                       onChange={handleMateriaisOutro}
                       placeholder="Ex: tecido, argila, caixa de papelão..."
-                      className="h-9 rounded-lg border-slate-200 bg-white shadow-none"
+                      className="h-9 rounded-lg border-slate-200 bg-white shadow-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
                       autoComplete="off"
                       aria-label="Outros materiais"
                     />
@@ -945,7 +945,7 @@ export default function PlanejamentoPage() {
                     onChange={handleChange}
                     placeholder="Necessidades especiais, contexto da turma, recursos do ambiente..."
                     rows={3}
-                    className="rounded-xl shadow-sm resize-none"
+                    className="resize-none rounded-xl shadow-sm dark:bg-slate-900 dark:text-slate-200"
                   />
                 </div>
               </section>
