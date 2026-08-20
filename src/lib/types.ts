@@ -15,7 +15,7 @@ export interface PlanningFormData {
   turno?: string;
   dataPeriodo?: string;
   duracao?: string;
-  tipoAtividade?: string[];  // múltipla seleção
+  tipoAtividade?: string[];
   materiaisDisponiveis?: string;
   observacoes?: string;
 }

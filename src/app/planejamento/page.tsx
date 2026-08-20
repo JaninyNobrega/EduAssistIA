@@ -9,6 +9,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { PlanningFormData, PlanningResult } from "@/lib/types";
 import { PlanningResult as PlanningResultComponent } from "@/components/planning/PlanningResult";
+import {
+  BNCC_FIELDS,
+  getBnccGuidance,
+  getBnccGroup,
+  orderWithSuggestions,
+} from "@/lib/bncc-data";
 
 // ─── Dados estáticos ──────────────────────────────────────────────────────────
 
@@ -40,13 +46,6 @@ const TIPOS_ATIVIDADE = [
 
 const DURACOES = ["20 minutos", "30 minutos", "40 minutos", "50 minutos"] as const;
 
-const CAMPOS_EXPERIENCIA = [
-  "O eu, o outro e o nós",
-  "Corpo, gestos e movimentos",
-  "Traços, sons, cores e formas",
-  "Escuta, fala, pensamento e imaginação",
-  "Espaços, tempos, quantidades, relações e transformações",
-] as const;
 
 const DIREITOS_APRENDIZAGEM = [
   "Conviver",
@@ -492,6 +491,23 @@ export default function PlanejamentoPage() {
   const [materiaisSelecionados, setMateriaisSelecionados] = useState<string[]>([]);
   const [materiaisOutro, setMateriaisOutro] = useState("");
 
+  // UX13: orientação contextual derivada da faixa etária e do campo selecionado.
+  const bnccGroup = getBnccGroup(form.faixaEtaria);
+  const bnccGuidance = getBnccGuidance(
+    form.faixaEtaria,
+    form.campoExperiencia,
+  );
+
+  const orderedActivities = orderWithSuggestions(
+    TIPOS_ATIVIDADE,
+    bnccGuidance?.suggestedActivities ?? [],
+  );
+
+  const orderedMaterials = orderWithSuggestions(
+    MATERIAIS_OPCOES,
+    bnccGuidance?.suggestedMaterials ?? [],
+  );
+
   function handleChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
   ) {
@@ -502,10 +518,29 @@ export default function PlanejamentoPage() {
 
       if (name === "turma") {
         next.faixaEtaria = TURMA_FAIXA_ETARIA[value] ?? "";
+
+        // A troca da turma altera o grupo etário de referência.
+        // Mantemos dados gerais, mas limpamos escolhas pedagógicas dependentes.
+        next.campoExperiencia = "";
+        next.direitosAprendizagem = [];
+        next.objetivoAprendizagem = "";
+        next.tipoAtividade = [];
+        next.materiaisDisponiveis = "";
+      }
+
+      if (name === "campoExperiencia") {
+        // O professor continua livre para escolher, mas evitamos carregar
+        // um objetivo associado a outro campo.
+        next.objetivoAprendizagem = "";
       }
 
       return next;
     });
+
+    if (name === "turma") {
+      setMateriaisSelecionados([]);
+      setMateriaisOutro("");
+    }
   }
 
   function handleCheckboxList(
@@ -570,6 +605,44 @@ export default function PlanejamentoPage() {
     const value = e.target.value;
     setTemaCustom(value);
     setForm((prev) => ({ ...prev, tema: value }));
+  }
+
+  function applySuggestedRights() {
+    if (!bnccGuidance) return;
+
+    setForm((prev) => ({
+      ...prev,
+      direitosAprendizagem: [...bnccGuidance.suggestedRights],
+    }));
+  }
+
+  function selectSuggestedObjective(text: string) {
+    setForm((prev) => ({
+      ...prev,
+      objetivoAprendizagem: text,
+    }));
+  }
+
+  function applySuggestedActivities() {
+    if (!bnccGuidance) return;
+
+    setForm((prev) => ({
+      ...prev,
+      tipoAtividade: [...bnccGuidance.suggestedActivities],
+    }));
+  }
+
+  function applySuggestedMaterials() {
+    if (!bnccGuidance) return;
+
+    const suggestions = [...bnccGuidance.suggestedMaterials];
+
+    setMateriaisSelecionados(suggestions);
+    setMateriaisOutro("");
+    setForm((prev) => ({
+      ...prev,
+      materiaisDisponiveis: suggestions.join(", "),
+    }));
   }
 
   function focusFirstError(stepErrors: FormErrors) {
@@ -791,9 +864,16 @@ export default function PlanejamentoPage() {
                         )}
                       </div>
                       {form.faixaEtaria && (
-                        <p className="text-xs text-slate-400 dark:text-slate-500">
-                          Definida automaticamente conforme a turma.
-                        </p>
+                        <div className="space-y-1">
+                          <p className="text-xs text-slate-400 dark:text-slate-500">
+                            Definida automaticamente conforme a turma.
+                          </p>
+                          {bnccGroup && (
+                            <p className="text-xs font-medium text-blue-600 dark:text-blue-400">
+                              Referência BNCC: {bnccGroup.label}
+                            </p>
+                          )}
+                        </div>
                       )}
                     </div>
 
@@ -839,7 +919,7 @@ export default function PlanejamentoPage() {
                 <section className="flex flex-col gap-5 rounded-2xl border border-slate-200/70 bg-white/95 p-5 shadow-[0_8px_30px_rgba(15,23,42,0.045)] dark:border-slate-800 dark:bg-slate-900/95 sm:p-6">
                   <StepHeader
                     title="Sobre a atividade"
-                    description="Escolha o tema e o formato que mais combinam com a proposta."
+                    description="Escolha o tema e a duração. As sugestões pedagógicas serão refinadas na próxima etapa."
                     icon={
                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
                         <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
@@ -900,35 +980,6 @@ export default function PlanejamentoPage() {
                     <FieldError message={submitted ? errors.tema : undefined} />
                   </div>
 
-                  <fieldset>
-                    <legend className="mb-3 text-sm font-medium text-slate-700 dark:text-slate-300">
-                      Tipo de atividade
-                      <span className="ml-1.5 text-xs font-normal text-slate-400 dark:text-slate-500">
-                        — pode selecionar mais de um
-                      </span>
-                    </legend>
-                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                      {TIPOS_ATIVIDADE.map((tipo) => (
-                        <label
-                          key={tipo}
-                          htmlFor={`tipo-${tipo}`}
-                          className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-slate-200/70 bg-slate-50/70 px-3 py-2.5 transition-all hover:border-blue-200 hover:bg-blue-50/70 has-[:checked]:border-blue-300 has-[:checked]:bg-blue-50 dark:border-slate-700 dark:bg-slate-800/60 dark:hover:border-blue-800 dark:hover:bg-blue-950/40 dark:has-[:checked]:border-blue-700 dark:has-[:checked]:bg-blue-950/50"
-                        >
-                          <Checkbox
-                            id={`tipo-${tipo}`}
-                            checked={form.tipoAtividade.includes(tipo)}
-                            onCheckedChange={(checked) =>
-                              handleCheckboxList("tipoAtividade", tipo, checked === true)
-                            }
-                          />
-                          <span className="select-none text-sm text-slate-700 dark:text-slate-300">
-                            {tipo}
-                          </span>
-                        </label>
-                      ))}
-                    </div>
-                  </fieldset>
-
                   <div className="flex flex-col gap-1.5 sm:max-w-xs">
                     <Label htmlFor="duracao">Duração</Label>
                     <SelectField
@@ -947,7 +998,7 @@ export default function PlanejamentoPage() {
                 <section className="flex flex-col gap-5 rounded-2xl border border-slate-200/70 bg-white/95 p-5 shadow-[0_8px_30px_rgba(15,23,42,0.045)] dark:border-slate-800 dark:bg-slate-900/95 sm:p-6">
                   <StepHeader
                     title="Proposta pedagógica"
-                    description="Agora defina os elementos pedagógicos que orientarão o planejamento."
+                    description="Selecione o campo de experiência e receba sugestões coerentes com o grupo etário de referência."
                     icon={
                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
                         <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
@@ -966,10 +1017,21 @@ export default function PlanejamentoPage() {
                       value={form.campoExperiencia}
                       onChange={handleChange}
                       placeholder="Selecione o campo de experiência"
-                      options={CAMPOS_EXPERIENCIA}
+                      options={BNCC_FIELDS}
                       invalid={submitted && !!errors.campoExperiencia}
                     />
                     <FieldError message={submitted ? errors.campoExperiencia : undefined} />
+
+                    {bnccGuidance && (
+                      <div className="mt-2 rounded-xl border border-blue-100 bg-blue-50/60 px-3 py-2.5 dark:border-blue-900/60 dark:bg-blue-950/30">
+                        <p className="text-xs font-semibold text-blue-700 dark:text-blue-300">
+                          Orientação BNCC ativa
+                        </p>
+                        <p className="mt-1 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                          As sugestões abaixo consideram {bnccGuidance.groupLabel} e o campo selecionado. Você pode aceitar, combinar ou modificar qualquer sugestão.
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   <fieldset>
@@ -980,6 +1042,21 @@ export default function PlanejamentoPage() {
                         — selecione pelo menos um
                       </span>
                     </legend>
+
+                    {bnccGuidance && (
+                      <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-slate-50/80 px-3 py-2 dark:bg-slate-800/60">
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                          Sugestões do EduAssist: {bnccGuidance.suggestedRights.join(" · ")}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={applySuggestedRights}
+                          className="text-xs font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                        >
+                          Usar sugestões
+                        </button>
+                      </div>
+                    )}
 
                     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                       {DIREITOS_APRENDIZAGEM.map((direito) => (
@@ -1009,6 +1086,33 @@ export default function PlanejamentoPage() {
                     <Label htmlFor="objetivoAprendizagem">
                       Objetivo de aprendizagem <span className="text-red-500" aria-label="obrigatório">*</span>
                     </Label>
+                    {bnccGuidance && bnccGuidance.objectives.length > 0 && (
+                      <div className="mb-2 space-y-2">
+                        <p className="text-xs text-slate-400 dark:text-slate-500">
+                          Sugestões de objetivos de aprendizagem e desenvolvimento da BNCC:
+                        </p>
+                        {bnccGuidance.objectives.map((objective) => (
+                          <button
+                            key={objective.code}
+                            type="button"
+                            onClick={() => selectSuggestedObjective(objective.text)}
+                            className={`w-full rounded-xl border p-3 text-left transition-all ${
+                              form.objetivoAprendizagem === objective.text
+                                ? "border-blue-400 bg-blue-50 ring-1 ring-blue-200 dark:border-blue-700 dark:bg-blue-950/40 dark:ring-blue-900"
+                                : "border-slate-200 bg-white hover:border-blue-200 hover:bg-blue-50/50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-blue-800 dark:hover:bg-blue-950/30"
+                            }`}
+                          >
+                            <span className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-blue-600 dark:text-blue-400">
+                              {objective.code}
+                            </span>
+                            <span className="mt-1 block text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                              {objective.text}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
                     <Textarea
                       id="objetivoAprendizagem"
                       name="objetivoAprendizagem"
@@ -1025,6 +1129,62 @@ export default function PlanejamentoPage() {
                     />
                     <FieldError message={submitted ? errors.objetivoAprendizagem : undefined} />
                   </div>
+
+                  <fieldset>
+                    <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                      <legend className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                        Tipo de atividade
+                        <span className="ml-1.5 text-xs font-normal text-slate-400 dark:text-slate-500">
+                          — pode selecionar mais de um
+                        </span>
+                      </legend>
+
+                      {bnccGuidance && (
+                        <button
+                          type="button"
+                          onClick={applySuggestedActivities}
+                          className="text-xs font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                        >
+                          Usar sugestões
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                      {orderedActivities.map((tipo) => {
+                        const isSuggested =
+                          bnccGuidance?.suggestedActivities.includes(tipo) ?? false;
+
+                        return (
+                          <label
+                            key={tipo}
+                            htmlFor={`tipo-${tipo}`}
+                            className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-slate-200/70 bg-slate-50/70 px-3 py-2.5 transition-all hover:border-blue-200 hover:bg-blue-50/70 has-[:checked]:border-blue-300 has-[:checked]:bg-blue-50 dark:border-slate-700 dark:bg-slate-800/60 dark:hover:border-blue-800 dark:hover:bg-blue-950/40 dark:has-[:checked]:border-blue-700 dark:has-[:checked]:bg-blue-950/50"
+                          >
+                            <Checkbox
+                              id={`tipo-${tipo}`}
+                              checked={form.tipoAtividade.includes(tipo)}
+                              onCheckedChange={(checked) =>
+                                handleCheckboxList(
+                                  "tipoAtividade",
+                                  tipo,
+                                  checked === true,
+                                )
+                              }
+                            />
+                            <span className="min-w-0 flex-1 select-none text-sm text-slate-700 dark:text-slate-300">
+                              {tipo}
+                            </span>
+                            {isSuggested && (
+                              <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                                Sugerido
+                              </span>
+                            )}
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </fieldset>
                 </section>
               )}
 
@@ -1044,12 +1204,23 @@ export default function PlanejamentoPage() {
 
                   <div className="flex flex-col gap-2">
                     <Label>Materiais disponíveis</Label>
-                    <p className="text-xs text-slate-400 dark:text-slate-500">
-                      Selecione os materiais que estarão disponíveis para a atividade.
-                    </p>
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="text-xs text-slate-400 dark:text-slate-500">
+                        Selecione os materiais que estarão disponíveis para a atividade.
+                      </p>
+                      {bnccGuidance && (
+                        <button
+                          type="button"
+                          onClick={applySuggestedMaterials}
+                          className="text-xs font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                        >
+                          Usar sugestões
+                        </button>
+                      )}
+                    </div>
 
                     <div className="flex flex-wrap gap-2" role="group" aria-label="Materiais disponíveis">
-                      {MATERIAIS_OPCOES.map((material) => (
+                      {orderedMaterials.map((material) => (
                         <button
                           key={material}
                           type="button"
@@ -1065,7 +1236,10 @@ export default function PlanejamentoPage() {
                               : "border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:bg-blue-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-800 dark:hover:bg-blue-950/40"
                           }`}
                         >
-                          {material}
+                          <span>{material}</span>
+                          {bnccGuidance?.suggestedMaterials.includes(material) && (
+                            <span className="ml-1 text-[10px] opacity-75">• sugerido</span>
+                          )}
                         </button>
                       ))}
                     </div>
