@@ -18,7 +18,13 @@ import {
 
 // ─── Dados estáticos ──────────────────────────────────────────────────────────
 
-const TURMAS = ["Berçário", "Maternal I", "Maternal II", "Infantil I", "Infantil II"] as const;
+const TURMAS = [
+  "Berçário",
+  "Maternal I",
+  "Maternal II",
+  "Infantil I",
+  "Infantil II",
+] as const;
 
 const TURMA_FAIXA_ETARIA: Record<string, string> = {
   Berçário: "0 a 1 ano",
@@ -44,8 +50,12 @@ const TIPOS_ATIVIDADE = [
   "Atividade com materiais concretos",
 ] as const;
 
-const DURACOES = ["20 minutos", "30 minutos", "40 minutos", "50 minutos"] as const;
-
+const DURACOES = [
+  "20 minutos",
+  "30 minutos",
+  "40 minutos",
+  "50 minutos",
+] as const;
 
 const DIREITOS_APRENDIZAGEM = [
   "Conviver",
@@ -89,7 +99,13 @@ const MATERIAIS_OPCOES = [
   "Elementos da natureza",
 ] as const;
 
-const STEP_LABELS = ["Turma", "Atividade", "Proposta", "Adicionais", "Revisão"] as const;
+const STEP_LABELS = [
+  "Turma",
+  "Atividade",
+  "Proposta",
+  "Adicionais",
+  "Revisão",
+] as const;
 
 const STEP_TITLES: Record<number, string> = {
   1: "Sobre a turma",
@@ -110,7 +126,10 @@ type FormErrors = {
   objetivoAprendizagem?: string;
 };
 
-type FormState = Omit<PlanningFormData, "direitosAprendizagem" | "tipoAtividade"> & {
+type FormState = Omit<
+  PlanningFormData,
+  "direitosAprendizagem" | "tipoAtividade"
+> & {
   direitosAprendizagem: string[];
   tipoAtividade: string[];
 };
@@ -138,9 +157,11 @@ function validate(form: FormState): FormErrors {
   if (!form.turma) errors.turma = "Selecione a turma.";
   if (!form.faixaEtaria) errors.faixaEtaria = "Selecione a faixa etária.";
   if (!form.tema.trim()) errors.tema = "Informe o tema da atividade.";
-  if (!form.campoExperiencia) errors.campoExperiencia = "Selecione o campo de experiência.";
+  if (!form.campoExperiencia)
+    errors.campoExperiencia = "Selecione o campo de experiência.";
   if (form.direitosAprendizagem.length === 0) {
-    errors.direitosAprendizagem = "Selecione pelo menos um direito de aprendizagem.";
+    errors.direitosAprendizagem =
+      "Selecione pelo menos um direito de aprendizagem.";
   }
   if (!form.objetivoAprendizagem.trim()) {
     errors.objetivoAprendizagem = "Descreva o objetivo de aprendizagem.";
@@ -202,7 +223,10 @@ function FieldError({ message }: { message?: string }) {
   if (!message) return null;
 
   return (
-    <p role="alert" className="mt-0.5 text-xs text-red-500">
+    <p
+      role="alert"
+      className="mt-0.5 text-xs font-medium text-red-600 dark:text-red-400"
+    >
       {message}
     </p>
   );
@@ -488,15 +512,14 @@ export default function PlanejamentoPage() {
 
   const [isOutroTema, setIsOutroTema] = useState(false);
   const [temaCustom, setTemaCustom] = useState("");
-  const [materiaisSelecionados, setMateriaisSelecionados] = useState<string[]>([]);
+  const [materiaisSelecionados, setMateriaisSelecionados] = useState<string[]>(
+    [],
+  );
   const [materiaisOutro, setMateriaisOutro] = useState("");
 
   // UX13: orientação contextual derivada da faixa etária e do campo selecionado.
   const bnccGroup = getBnccGroup(form.faixaEtaria);
-  const bnccGuidance = getBnccGuidance(
-    form.faixaEtaria,
-    form.campoExperiencia,
-  );
+  const bnccGuidance = getBnccGuidance(form.faixaEtaria, form.campoExperiencia);
 
   const orderedActivities = orderWithSuggestions(
     TIPOS_ATIVIDADE,
@@ -509,7 +532,9 @@ export default function PlanejamentoPage() {
   );
 
   function handleChange(
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
   ) {
     const { name, value } = e.target;
 
@@ -775,7 +800,10 @@ export default function PlanejamentoPage() {
             Voltar
           </Link>
 
-          <span className="text-slate-200 dark:text-slate-700" aria-hidden="true">
+          <span
+            className="text-slate-200 dark:text-slate-700"
+            aria-hidden="true"
+          >
             |
           </span>
 
@@ -811,20 +839,35 @@ export default function PlanejamentoPage() {
                 Novo Planejamento
               </h1>
               <p className="mt-1.5 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
-                Vamos organizar sua proposta em etapas simples. Seus dados permanecem salvos enquanto você avança ou volta.
+                Vamos organizar sua proposta em etapas simples. Seus dados
+                permanecem salvos enquanto você avança ou volta.
               </p>
             </div>
 
             <WizardProgress currentStep={currentStep} />
 
-            <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
+            <form
+              onSubmit={handleSubmit}
+              noValidate
+              className="flex flex-col gap-4"
+            >
               {currentStep === 1 && (
                 <section className="flex flex-col gap-5 rounded-2xl border border-slate-200/70 bg-white/95 p-5 shadow-[0_8px_30px_rgba(15,23,42,0.045)] dark:border-slate-800 dark:bg-slate-900/95 sm:p-6">
                   <StepHeader
                     title="Sobre a turma"
                     description="Comece pelas informações básicas da turma e da data da atividade."
                     icon={
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="h-4 w-4"
+                        aria-hidden="true"
+                      >
                         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
                         <circle cx="9" cy="7" r="4" />
                         <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
@@ -836,7 +879,10 @@ export default function PlanejamentoPage() {
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div className="flex flex-col gap-1.5">
                       <Label htmlFor="turma">
-                        Turma <span className="text-red-500" aria-label="obrigatório">*</span>
+                        Turma{" "}
+                        <span className="text-red-500" aria-label="obrigatório">
+                          *
+                        </span>
                       </Label>
                       <SelectField
                         id="turma"
@@ -847,22 +893,25 @@ export default function PlanejamentoPage() {
                         options={TURMAS}
                         invalid={submitted && !!errors.turma}
                       />
-                      <FieldError message={submitted ? errors.turma : undefined} />
+                      <FieldError
+                        message={submitted ? errors.turma : undefined}
+                      />
                     </div>
 
                     <div className="flex flex-col gap-1.5">
                       <Label htmlFor="faixaEtaria">Faixa etária</Label>
-                      <div
+
+                      <output
                         id="faixaEtaria"
-                        aria-label="Faixa etária inferida automaticamente"
+                        aria-live="polite"
                         className="flex h-9 w-full items-center rounded-xl border border-slate-200 bg-slate-50 px-3 py-1 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-300"
                       >
                         {form.faixaEtaria || (
-                          <span className="italic text-slate-400 dark:text-slate-500">
+                          <span className="italic text-slate-500 dark:text-slate-400">
                             Definida conforme a turma
                           </span>
                         )}
-                      </div>
+                      </output>
                       {form.faixaEtaria && (
                         <div className="space-y-1">
                           <p className="text-xs text-slate-400 dark:text-slate-500">
@@ -892,8 +941,25 @@ export default function PlanejamentoPage() {
                     <div className="flex flex-col gap-1.5">
                       <Label htmlFor="dataPeriodo">Data</Label>
                       <div className="group flex h-9 w-full items-center gap-2 rounded-xl border border-input bg-white px-3 shadow-sm transition-colors focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 dark:bg-slate-900">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 shrink-0 text-slate-400 transition-colors group-focus-within:text-blue-600" aria-hidden="true">
-                          <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="h-4 w-4 shrink-0 text-slate-400 transition-colors group-focus-within:text-blue-600"
+                          aria-hidden="true"
+                        >
+                          <rect
+                            x="3"
+                            y="4"
+                            width="18"
+                            height="18"
+                            rx="2"
+                            ry="2"
+                          />
                           <line x1="16" y1="2" x2="16" y2="6" />
                           <line x1="8" y1="2" x2="8" y2="6" />
                           <line x1="3" y1="10" x2="21" y2="10" />
@@ -921,21 +987,42 @@ export default function PlanejamentoPage() {
                     title="Sobre a atividade"
                     description="Escolha o tema e a duração. As sugestões pedagógicas serão refinadas na próxima etapa."
                     icon={
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="h-4 w-4"
+                        aria-hidden="true"
+                      >
                         <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                       </svg>
                     }
                   />
 
-                  <div className="flex flex-col gap-1.5">
-                    <Label>
-                      Tema <span className="text-red-500" aria-label="obrigatório">*</span>
-                    </Label>
-                    <p className="text-xs text-slate-400 dark:text-slate-500">
+                  <fieldset className="flex flex-col gap-1.5">
+                    <legend className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                      Tema{" "}
+                      <span
+                        className="text-red-600 dark:text-red-400"
+                        aria-label="obrigatório"
+                      >
+                        *
+                      </span>
+                    </legend>
+
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
                       Escolha uma sugestão ou informe um tema personalizado.
                     </p>
 
-                    <div className="flex flex-wrap gap-2" role="group" aria-label="Sugestões de tema">
+                    <div
+                      className="flex flex-wrap gap-2"
+                      role="group"
+                      aria-label="Sugestões de tema"
+                    >
                       {TEMAS_SUGERIDOS.map((tema) => (
                         <button
                           key={tema}
@@ -971,14 +1058,16 @@ export default function PlanejamentoPage() {
                         value={temaCustom}
                         onChange={handleTemaCustom}
                         placeholder="Descreva o tema..."
-                        className={`mt-1 h-9 rounded-xl shadow-sm dark:bg-slate-900 dark:text-slate-200${submitted && errors.tema ? " border-red-400" : ""}`}
+                        className={`mt-1 h-9 rounded-xl shadow-sm dark:bg-slate-900 dark:text-slate-200${
+                          submitted && errors.tema ? " border-red-400" : ""
+                        }`}
                         autoComplete="off"
                         aria-label="Descreva o tema"
                       />
                     )}
 
                     <FieldError message={submitted ? errors.tema : undefined} />
-                  </div>
+                  </fieldset>
 
                   <div className="flex flex-col gap-1.5 sm:max-w-xs">
                     <Label htmlFor="duracao">Duração</Label>
@@ -1000,7 +1089,17 @@ export default function PlanejamentoPage() {
                     title="Proposta pedagógica"
                     description="Selecione o campo de experiência e receba sugestões coerentes com o grupo etário de referência."
                     icon={
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="h-4 w-4"
+                        aria-hidden="true"
+                      >
                         <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
                         <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
                       </svg>
@@ -1009,7 +1108,10 @@ export default function PlanejamentoPage() {
 
                   <div className="flex flex-col gap-1.5">
                     <Label htmlFor="campoExperiencia">
-                      Campo de experiência <span className="text-red-500" aria-label="obrigatório">*</span>
+                      Campo de experiência{" "}
+                      <span className="text-red-500" aria-label="obrigatório">
+                        *
+                      </span>
                     </Label>
                     <SelectField
                       id="campoExperiencia"
@@ -1020,7 +1122,9 @@ export default function PlanejamentoPage() {
                       options={BNCC_FIELDS}
                       invalid={submitted && !!errors.campoExperiencia}
                     />
-                    <FieldError message={submitted ? errors.campoExperiencia : undefined} />
+                    <FieldError
+                      message={submitted ? errors.campoExperiencia : undefined}
+                    />
 
                     {bnccGuidance && (
                       <div className="mt-2 rounded-xl border border-blue-100 bg-blue-50/60 px-3 py-2.5 dark:border-blue-900/60 dark:bg-blue-950/30">
@@ -1028,7 +1132,9 @@ export default function PlanejamentoPage() {
                           Orientação BNCC ativa
                         </p>
                         <p className="mt-1 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-                          As sugestões abaixo consideram {bnccGuidance.groupLabel} e o campo selecionado. Você pode aceitar, combinar ou modificar qualquer sugestão.
+                          As sugestões abaixo consideram{" "}
+                          {bnccGuidance.groupLabel} e o campo selecionado. Você
+                          pode aceitar, combinar ou modificar qualquer sugestão.
                         </p>
                       </div>
                     )}
@@ -1037,7 +1143,9 @@ export default function PlanejamentoPage() {
                   <fieldset>
                     <legend className="mb-3 text-sm font-medium text-slate-700 dark:text-slate-300">
                       Direitos de aprendizagem{" "}
-                      <span className="text-red-500" aria-label="obrigatório">*</span>
+                      <span className="text-red-500" aria-label="obrigatório">
+                        *
+                      </span>
                       <span className="ml-1.5 text-xs font-normal text-slate-400 dark:text-slate-500">
                         — selecione pelo menos um
                       </span>
@@ -1046,7 +1154,8 @@ export default function PlanejamentoPage() {
                     {bnccGuidance && (
                       <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-slate-50/80 px-3 py-2 dark:bg-slate-800/60">
                         <p className="text-xs text-slate-500 dark:text-slate-400">
-                          Sugestões do EduAssist: {bnccGuidance.suggestedRights.join(" · ")}
+                          Sugestões do EduAssist:{" "}
+                          {bnccGuidance.suggestedRights.join(" · ")}
                         </p>
                         <button
                           type="button"
@@ -1067,9 +1176,15 @@ export default function PlanejamentoPage() {
                         >
                           <Checkbox
                             id={`direito-${direito}`}
-                            checked={form.direitosAprendizagem.includes(direito)}
+                            checked={form.direitosAprendizagem.includes(
+                              direito,
+                            )}
                             onCheckedChange={(checked) =>
-                              handleCheckboxList("direitosAprendizagem", direito, checked === true)
+                              handleCheckboxList(
+                                "direitosAprendizagem",
+                                direito,
+                                checked === true,
+                              )
                             }
                           />
                           <span className="select-none text-sm text-slate-700 dark:text-slate-300">
@@ -1079,23 +1194,33 @@ export default function PlanejamentoPage() {
                       ))}
                     </div>
 
-                    <FieldError message={submitted ? errors.direitosAprendizagem : undefined} />
+                    <FieldError
+                      message={
+                        submitted ? errors.direitosAprendizagem : undefined
+                      }
+                    />
                   </fieldset>
 
                   <div className="flex flex-col gap-1.5">
                     <Label htmlFor="objetivoAprendizagem">
-                      Objetivo de aprendizagem <span className="text-red-500" aria-label="obrigatório">*</span>
+                      Objetivo de aprendizagem{" "}
+                      <span className="text-red-500" aria-label="obrigatório">
+                        *
+                      </span>
                     </Label>
                     {bnccGuidance && bnccGuidance.objectives.length > 0 && (
                       <div className="mb-2 space-y-2">
                         <p className="text-xs text-slate-400 dark:text-slate-500">
-                          Sugestões de objetivos de aprendizagem e desenvolvimento da BNCC:
+                          Sugestões de objetivos de aprendizagem e
+                          desenvolvimento da BNCC:
                         </p>
                         {bnccGuidance.objectives.map((objective) => (
                           <button
                             key={objective.code}
                             type="button"
-                            onClick={() => selectSuggestedObjective(objective.text)}
+                            onClick={() =>
+                              selectSuggestedObjective(objective.text)
+                            }
                             className={`w-full rounded-xl border p-3 text-left transition-all ${
                               form.objetivoAprendizagem === objective.text
                                 ? "border-blue-400 bg-blue-50 ring-1 ring-blue-200 dark:border-blue-700 dark:bg-blue-950/40 dark:ring-blue-900"
@@ -1127,7 +1252,11 @@ export default function PlanejamentoPage() {
                       }`}
                       aria-invalid={submitted && !!errors.objetivoAprendizagem}
                     />
-                    <FieldError message={submitted ? errors.objetivoAprendizagem : undefined} />
+                    <FieldError
+                      message={
+                        submitted ? errors.objetivoAprendizagem : undefined
+                      }
+                    />
                   </div>
 
                   <fieldset>
@@ -1153,7 +1282,8 @@ export default function PlanejamentoPage() {
                     <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                       {orderedActivities.map((tipo) => {
                         const isSuggested =
-                          bnccGuidance?.suggestedActivities.includes(tipo) ?? false;
+                          bnccGuidance?.suggestedActivities.includes(tipo) ??
+                          false;
 
                         return (
                           <label
@@ -1194,7 +1324,17 @@ export default function PlanejamentoPage() {
                     title="Informações adicionais"
                     description="Complete apenas o que fizer sentido para a sua realidade."
                     icon={
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="h-4 w-4"
+                        aria-hidden="true"
+                      >
                         <circle cx="12" cy="12" r="10" />
                         <line x1="12" y1="8" x2="12" y2="12" />
                         <line x1="12" y1="16" x2="12.01" y2="16" />
@@ -1202,12 +1342,14 @@ export default function PlanejamentoPage() {
                     }
                   />
 
-                  <div className="flex flex-col gap-2">
-                    <Label>Materiais disponíveis</Label>
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <p className="text-xs text-slate-400 dark:text-slate-500">
-                        Selecione os materiais que estarão disponíveis para a atividade.
-                      </p>
+                  <fieldset className="flex flex-col gap-2">
+  <legend className="text-sm font-medium text-slate-700 dark:text-slate-300">
+    Materiais disponíveis
+  </legend>
+
+  <p className="text-xs text-slate-500 dark:text-slate-400">
+    Selecione os materiais que estarão disponíveis para a atividade.
+  </p>
                       {bnccGuidance && (
                         <button
                           type="button"
@@ -1217,9 +1359,13 @@ export default function PlanejamentoPage() {
                           Usar sugestões
                         </button>
                       )}
-                    </div>
+                    
 
-                    <div className="flex flex-wrap gap-2" role="group" aria-label="Materiais disponíveis">
+                    <div
+                      className="flex flex-wrap gap-2"
+                      role="group"
+                      aria-label="Materiais disponíveis"
+                    >
                       {orderedMaterials.map((material) => (
                         <button
                           key={material}
@@ -1237,8 +1383,12 @@ export default function PlanejamentoPage() {
                           }`}
                         >
                           <span>{material}</span>
-                          {bnccGuidance?.suggestedMaterials.includes(material) && (
-                            <span className="ml-1 text-[10px] opacity-75">• sugerido</span>
+                          {bnccGuidance?.suggestedMaterials.includes(
+                            material,
+                          ) && (
+                            <span className="ml-1 text-[10px] opacity-75">
+                              • sugerido
+                            </span>
                           )}
                         </button>
                       ))}
@@ -1246,7 +1396,17 @@ export default function PlanejamentoPage() {
 
                     <div className="mt-1 rounded-xl border border-dashed border-slate-200/90 bg-slate-50/70 p-3 dark:border-slate-700 dark:bg-slate-800/50">
                       <div className="mb-2 flex items-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 text-slate-400" aria-hidden="true">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="h-4 w-4 text-slate-400"
+                          aria-hidden="true"
+                        >
                           <line x1="12" y1="5" x2="12" y2="19" />
                           <line x1="5" y1="12" x2="19" y2="12" />
                         </svg>
@@ -1265,7 +1425,7 @@ export default function PlanejamentoPage() {
                         aria-label="Outros materiais"
                       />
                     </div>
-                  </div>
+                  </fieldset>
 
                   <div className="flex flex-col gap-1.5">
                     <Label htmlFor="observacoes">Observações</Label>
@@ -1289,7 +1449,17 @@ export default function PlanejamentoPage() {
                       title="Revise seu planejamento"
                       description="Confira as escolhas antes de gerar. Você pode voltar e editar qualquer etapa."
                       icon={
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="h-4 w-4"
+                          aria-hidden="true"
+                        >
                           <path d="M9 11l3 3L22 4" />
                           <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
                         </svg>
@@ -1298,7 +1468,11 @@ export default function PlanejamentoPage() {
                   </div>
 
                   <div className="px-5 pb-2 sm:px-6">
-                    <ReviewSection title="Turma" step={1} onEdit={handleEditStep}>
+                    <ReviewSection
+                      title="Turma"
+                      step={1}
+                      onEdit={handleEditStep}
+                    >
                       <p className="text-sm font-medium text-slate-800 dark:text-slate-100">
                         {form.turma}
                       </p>
@@ -1306,14 +1480,20 @@ export default function PlanejamentoPage() {
                         {[
                           form.faixaEtaria,
                           form.turno,
-                          form.dataPeriodo ? formatDateBR(form.dataPeriodo) : "",
+                          form.dataPeriodo
+                            ? formatDateBR(form.dataPeriodo)
+                            : "",
                         ]
                           .filter(Boolean)
                           .join(" · ")}
                       </p>
                     </ReviewSection>
 
-                    <ReviewSection title="Atividade" step={2} onEdit={handleEditStep}>
+                    <ReviewSection
+                      title="Atividade"
+                      step={2}
+                      onEdit={handleEditStep}
+                    >
                       <p className="text-sm font-medium text-slate-800 dark:text-slate-100">
                         {form.tema}
                       </p>
@@ -1338,7 +1518,11 @@ export default function PlanejamentoPage() {
                       )}
                     </ReviewSection>
 
-                    <ReviewSection title="Proposta pedagógica" step={3} onEdit={handleEditStep}>
+                    <ReviewSection
+                      title="Proposta pedagógica"
+                      step={3}
+                      onEdit={handleEditStep}
+                    >
                       <p className="text-sm font-medium text-slate-800 dark:text-slate-100">
                         {form.campoExperiencia}
                       </p>
@@ -1364,7 +1548,11 @@ export default function PlanejamentoPage() {
                       </div>
                     </ReviewSection>
 
-                    <ReviewSection title="Informações adicionais" step={4} onEdit={handleEditStep}>
+                    <ReviewSection
+                      title="Informações adicionais"
+                      step={4}
+                      onEdit={handleEditStep}
+                    >
                       {form.materiaisDisponiveis ? (
                         <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
                           <span className="font-medium text-slate-700 dark:text-slate-200">
@@ -1391,7 +1579,10 @@ export default function PlanejamentoPage() {
 
                   <div className="flex flex-col items-center gap-2 border-t border-slate-100 bg-slate-50/60 px-5 py-5 dark:border-slate-800 dark:bg-slate-950/30 sm:px-6">
                     {apiError && (
-                      <p role="alert" className="text-center text-sm text-red-500">
+                      <p
+                        role="alert"
+                        className="text-center text-sm text-red-500"
+                      >
                         {apiError}
                       </p>
                     )}
@@ -1403,14 +1594,34 @@ export default function PlanejamentoPage() {
                     >
                       {isLoading ? (
                         <>
-                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 animate-spin" aria-hidden="true">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="h-4 w-4 animate-spin"
+                            aria-hidden="true"
+                          >
                             <path d="M21 12a9 9 0 1 1-6.219-8.56" />
                           </svg>
                           Gerando...
                         </>
                       ) : (
                         <>
-                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="h-4 w-4"
+                            aria-hidden="true"
+                          >
                             <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
                           </svg>
                           Gerar planejamento
@@ -1419,7 +1630,8 @@ export default function PlanejamentoPage() {
                     </Button>
 
                     <p className="max-w-sm text-center text-xs text-slate-400 dark:text-slate-500">
-                      O resultado será uma sugestão que poderá ser revisada e editada antes do uso.
+                      O resultado será uma sugestão que poderá ser revisada e
+                      editada antes do uso.
                     </p>
                   </div>
                 </section>
@@ -1442,7 +1654,17 @@ export default function PlanejamentoPage() {
                     disabled={isLoading}
                     className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-medium text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 disabled:opacity-50 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="h-4 w-4"
+                      aria-hidden="true"
+                    >
                       <line x1="19" y1="12" x2="5" y2="12" />
                       <polyline points="12 19 5 12 12 5" />
                     </svg>
@@ -1471,7 +1693,17 @@ export default function PlanejamentoPage() {
                     onClick={handleEditInformations}
                     className="inline-flex items-center gap-1.5 self-start text-sm font-medium text-blue-600 transition-colors hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 sm:self-auto"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5" aria-hidden="true">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="h-3.5 w-3.5"
+                      aria-hidden="true"
+                    >
                       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                       <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                     </svg>
