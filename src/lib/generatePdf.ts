@@ -4,7 +4,6 @@ import type { PlanningResult } from "@/lib/types";
 
 const MARGIN_X = 18;
 const PAGE_W = 210;
-const PAGE_H = 297;
 const CONTENT_W = PAGE_W - MARGIN_X * 2;
 
 const TOP_CONTENT_Y = 34;
